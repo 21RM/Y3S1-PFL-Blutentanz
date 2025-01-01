@@ -2,7 +2,15 @@
 % ======     THIS FILE CONTAINS THE PREDICATES RELATED TO TILES AND BOARD GENERATION       ====== %
 % =============================================================================================== %
 
+% ---------------------------------------- Definitions ------------------------------------------ %
 :- module(board, [display_board/1]).
+% ----------------------------------------------------------------------------------------------- %
+
+
+% ---------------------------------------- INCLUDES --------------------------------------------- %
+:- use_module('display.pl').
+% ----------------------------------------------------------------------------------------------- %
+
 
 % ------------------ True color escape sequences for a brown background ------------------------- %
 bg_light_brown('\e[48;2;235;235;210m').      % Light wood (BurlyWood)
@@ -10,6 +18,7 @@ bg_brown('\e[48;2;189;119;69m').       % Medium wood (SaddleBrown)
 text_brown('\e[38;2;189;119;69m').  % Text in brown (SaddleBrown)
 reset_color('\e[0m').                 % Reset to default
 % ----------------------------------------------------------------------------------------------- %
+
 
 % -------------------- Unicode characters using their character codes --------------------------- %
 % --> Corners
@@ -56,20 +65,25 @@ rotated_sides(Sides, Rotation, RotatedSides) :-
     Steps is Rotation // 90, % - Calculate the number of 90º steps.
     rotate_list(Sides, Steps, RotatedSides).
 
-% --> Helper that rotates a list on a number of steps.
-rotate_list(List, 0, List). % - No rotation needed.
-rotate_list([H | T], Steps, RotatedList) :-
-    Steps > 0,
-    append(T, [H], TempList), % - Moving the head to the end.
-    NextSteps is Steps -1, % - Decremeting the number of steps.
-    rotate_list(TempList, NextSteps, RotatedList). % - Recursive call to rotate it multiple times.
+% Rotate a list following the custom order: 
+rotate_list([A, B, C, D], 1, [C, A, D, B]). % Single-step rotation
+rotate_list(List, 0, List).
+rotate_list(List, Steps, RotatedList) :-
+    Steps > 1,                              % If more steps are needed
+    rotate_list(List, 1, TempList),         % Perform one rotation
+    NextSteps is Steps - 1,                 % Decrement the number of steps
+    rotate_list(TempList, NextSteps, RotatedList). % Recur for the remaining steps
 % ----------------------------------------------------------------------------------------------- %
+
+
 
 
 
 % -------------------------------------- DISPLAY BOARD ------------------------------------------ %
 % --> Main predicate to display the entire board.
 display_board(Board) :-
+    clear_screen,
+    print_title,
     length(Board, RowCount), % - Determine the number of rows.
     RowWidth is RowCount * 12, % - Width based on the number of tiles.
     print_top_border(RowWidth), % - Top border.
@@ -167,13 +181,11 @@ spacer([], _, _) :-
     reset_color(Reset), 
     write(Reset), write(Brown), write(' '), write(TxtBrown), write(Vertical), write(Reset),
     nl.
-spacer([Tile | Rest], F1, F2) :-
+spacer([_ | Rest], F1, F2) :-
     bg_brown(Brown),
     bg_light_brown(LBrown),
     text_brown(TxtBrown),
     reset_color(Reset), 
-    color_symbol(BottomLeft, LeftSymbol),
-    color_symbol(BottomRight, RightSymbol),
     unicode_vertical(Vertical),
     write(Brown), write(TxtBrown), write(Vertical), write(' '), write(Reset), write(LBrown), write(TxtBrown), 
     write(F1), write(F2), write(Reset), write(LBrown), write('      '), write(TxtBrown), write(F2), write(F1), write(Reset),        % - Display the symbols.
