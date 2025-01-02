@@ -3,17 +3,15 @@
 % ========================================================================================== %
 
 :- use_module('board.pl').
-
+:- use_module('menu.pl').
 
 
 % ---------------------------------------- MAIN LOOP -------------------------------------------- %
 % --> Main predicate for the game.
 play :-
-    initial_state(GameState), % Initialize the game state (TODO::for now, just the board).
-    display_board(GameState). % Display the board
+    main_menu.  % Start the main menu
+
 % ----------------------------------------------------------------------------------------------- %
-
-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
