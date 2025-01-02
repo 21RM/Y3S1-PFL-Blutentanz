@@ -6,6 +6,7 @@
 :- use_module('board.pl').
 :- use_module('random.pl').
 :- use_module('display.pl').
+:- use_module('menu.pl').
 % ----------------------------------------------------------------------------------------------- %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
@@ -14,15 +15,14 @@ standard_tile([empty, orange, blue, gray]).
 % ----------------------------------------------------------------------------------------------- %
 
 
-
 % ---------------------------------------- MAIN LOOP -------------------------------------------- %
 % --> Main predicate for the game.
 play :-
-    initial_state(GameState), % Initialize the game state (TODO::for now, just the board).
-    display_board(GameState). % Display the board
+    main_menu,  % Start the main menu
+    initial_state(Board),  % Initialize the game state
+    display_board(Board).  % Display the board
+
 % ----------------------------------------------------------------------------------------------- %
-
-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
