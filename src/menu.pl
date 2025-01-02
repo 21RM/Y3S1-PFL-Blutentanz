@@ -1,11 +1,12 @@
 
 :- use_module('board.pl').
 
+
 :- module(menu, [main_menu/0]).
 
 % ------------------------------------ MENU  ------------------------------------ %
 % Main menu logic
-main_menu :-
+main_menu:-
     Options = ['Start Game', 'Settings', 'Exit'],
     Title = 'Main Menu',
     menu_loop(Options, Title).
@@ -109,9 +110,8 @@ start_game_menu :-
     menu_loop(Options, Title).
 
 handle_selection('Human vs Human') :-
-    write('Starting the game...\n'),
-    initial_state(GameState),  % Initialize the game state
-    display_board(GameState).  % Display the board
+    write('Starting the game...\n').
+    
     
 
 handle_selection('Human vs Bot') :-
