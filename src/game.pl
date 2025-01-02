@@ -7,6 +7,7 @@
 :- use_module('random.pl').
 :- use_module('display.pl').
 :- use_module('list.pl').
+:- use_module('menu.pl').
 % ----------------------------------------------------------------------------------------------- %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
@@ -19,6 +20,7 @@ standard_tile([empty, orange, blue, gray]).
 % --------------------------------------- MAIN PREDICATE ---------------------------------------- %
 % --> Main predicate for the game.
 play :-
+    main_menu,
     TemporaryGameConfig = config(
         [4, 4],
         [human, human]
@@ -26,8 +28,6 @@ play :-
     initial_state(TemporaryGameConfig, GameState), % Initialize the game state (TODO::Dynamic configurations).
     display_game(GameState). % Display the board
 % ----------------------------------------------------------------------------------------------- %
-
-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
