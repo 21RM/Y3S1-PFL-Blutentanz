@@ -8,6 +8,7 @@
 :- use_module('display.pl').
 :- use_module('list.pl').
 :- use_module('menu.pl').
+:- use_module('move.pl').
 % ----------------------------------------------------------------------------------------------- %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
@@ -22,21 +23,26 @@ standard_tile([empty, orange, blue, gray]).
 play :-
     main_menu,
     TemporaryGameConfig = config(
-        [4, 6],
+        [5,5],
+        [4, 4],
         [human, human]
     ),
     initial_state(TemporaryGameConfig, GameState), % Initialize the game state (TODO::Dynamic configurations).
-    game_loop(GameState). % - Main Game Loop, at the end of the file cause its the bigger predicate
+    display_game(GameState), % Display the board
+    game_play(GameState). % Start the game loop.
 % ----------------------------------------------------------------------------------------------- %
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
-initial_state(config([Rows, Columns], [Player1Type, Player2Type]), GameState) :-
+initial_state(config([Player1Pieces,Player2Pieces],[Rows, Columns], [Player1Type, Player2Type]), GameState) :-
+    % -> Initialize pieces.
+    initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces),
+    
     % -> Generate the board.
     generate_random_board(Rows, Columns, Board),
 
     % -> Initialize players.
-    initialize_players(Player1Type, Player2Type, Players),
+    initialize_players(Player1Type, Player2Type,Player1Pieces,Player2Pieces, Players),
 
     % -> Set player 1 has starter, orange starts first.
     idx(1, Players, CurrentPlayer),
@@ -75,14 +81,26 @@ maplist(Predicate, [Head | Tail]) :-
     call(Predicate, Head),  % Call the predicate on the current element
     maplist(Predicate, Tail).  % Recurse for the rest of the list
 
+% --> Initialize Players, with types and colors.
+initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces):-
+    create_pieces(Player1PiecesCount, Player1Pieces),
+    create_pieces(Player2PiecesCount, Player2Pieces).
 
+
+% Base case: When Count is 0, return an empty list.
+create_pieces(0, []) :- !.
+
+% Recursive case: Add [[0,0], [0,0]] to the result list.
+create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
+    Count > 0,
+    NextCount is Count - 1,
+    create_pieces(NextCount, Rest).
 
 % --> Initialize Players, with types and colors.
-initialize_players(Player1Type, Player2Type, [Player1, Player2]) :-
-    Player1 = player(player1, Player1Type, orange, pieces([])),
-    Player2 = player(player2, Player2Type, blue, pieces([])).
+initialize_players(Player1Type, Player2Type, Pieces, [Player1, Player2]) :-
+    Player1 = player(player1, Player1Type, orange, Player1Pieces),
+    Player2 = player(player2, Player2Type, blue, Player2Pieces).
 % ----------------------------------------------------------------------------------------------- %
-
 
 
 % ---------------------------------------- DISPLAY GAME ----------------------------------------- %
@@ -124,5 +142,4 @@ rotation_phase(GameState, RotatedGameState) :-
     display_game(RotatedGameState),
     write('Tile rotated successfully!'), nl.
 % ----------------------------------------------------------------------------------------------- %
-
 

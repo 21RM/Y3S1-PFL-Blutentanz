@@ -111,10 +111,8 @@ handle_selection('Human vs Human') :-
     write('Starting the game...\n').
 handle_selection('Human vs Bot') :-
     write('Starting Human vs Bot...\n'),
-    % Add logic for loading a game
     start_game_menu.
 handle_selection('Bot vs Bot') :-
     write('Starting bot vs bot...\n'),
-    % Add logic for multiplayer
     start_game_menu.
 % ----------------------------------------------------------------------------------------------- %
