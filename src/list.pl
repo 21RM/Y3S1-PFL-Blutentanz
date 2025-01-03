@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3]).
+:- module(myList, [idx/3, replace_index/4]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -14,3 +14,11 @@ idx(Index, [_ | Tail], Element) :-
     Index > 1,                    % Ensure Index is greater than 1.
     NextIndex is Index - 1,       % Decrement the Index.
     idx(NextIndex, Tail, Element). % Recurse on the tail with the decremented Index.
+
+replace_index(1, NewElement, [_|Tail], [NewElement|Tail]).
+replace_index(Index, NewElement, [Head|Tail], [Head|NewTail]) :-
+    write('replacing index: '), write(Index), nl,
+    Index > 1,
+    NextIndex is Index - 1,
+    replace_index(NextIndex, NewElement, Tail, NewTail).
+    

@@ -53,16 +53,6 @@ initial_state(config([Player1Pieces,Player2Pieces],[Rows, Columns], [Player1Type
 
 
 
-% ---------------------------------------- DISPLAY GAME ----------------------------------------- %
-% --> Main display game predicate.
-display_game(state(Board, Players,Pieces, CurrentPlayer)) :-
-    clear_screen,
-    %display_current_player(CurrentPlayer),
-    %display_player_info(Players),
-    display_board(Board).
-% ----------------------------------------------------------------------------------------------- %
-
-
 
 % ----------------------------------------- Helpers --------------------------------------------- %
 % --> Assign a random rotation to a tile.
@@ -70,12 +60,13 @@ randomize_tile(tile(Sides, Rotation)) :-
     standard_tile(Sides),                         % - Use the fixed tile colors.
     my_random_member(Rotation, [0, 90, 180, 270]).  % - Randomly select a rotation.
 
-% --> Generate a lxc board with random rotations. (TODO -> for now 4*4 is placeholder)
+% --> Generate a lxc board with random rotations.
 generate_random_board(Rows, Columns, Board) :-
     TotalTiles is Rows * Columns,
     length(Tiles, TotalTiles),                     % - Create a list of l*c placeholders.
     maplist(randomize_tile, Tiles),        % - Randomize the rotation of each tile.
-    partition_board(Columns, Tiles, Board).         % - Partition the tiles into rows.
+    partition_board(Columns, Tiles, Board),        % - Partition the tiles into rows.
+    write(Board).
 
 % --> Partition a flat list into rows of l elements each. (TODO -> for now is 4 as a placeholder)
 partition_board(_, [], []).
@@ -110,3 +101,45 @@ initialize_players(Player1Type, Player2Type, Pieces, [Player1, Player2]) :-
     Player1 = player(player1, Player1Type, orange, Player1Pieces),
     Player2 = player(player2, Player2Type, blue, Player2Pieces).
 % ----------------------------------------------------------------------------------------------- %
+
+
+% ---------------------------------------- DISPLAY GAME ----------------------------------------- %
+% --> Main display game predicate.
+display_game(state(Board, Players, CurrentPlayer)) :-
+    clear_screen,
+    %display_current_player(CurrentPlayer),
+    %display_player_info(Players),
+    display_board(Board).
+% ----------------------------------------------------------------------------------------------- %
+
+
+
+% ---------------------------------------- GAME LOOP -------------------------------------------- %
+game_loop(GameState) :-
+    display_game(GameState), % - presented up, in its own comment encapsulation.
+    GameState = state(_,_, CurrentPlayer),
+
+    % -> Execute the current player's turn
+    take_turn(CurrentPlayer, GameState, UpdatedGameState).
+% ----------------------------------------------------------------------------------------------- %
+
+% ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
+take_turn(CurrentPlayer, GameState, UpdatedGameState) :-
+    write('Rotation Phase for '), % display_current_player(CurrentPlayer), nl, (TODO::Display player name)
+    rotation_phase(GameState, RotatedGameState),
+    UpdatedGameState = RotatedGameState.
+
+% --> Rotation Phase.
+rotation_phase(GameState, RotatedGameState) :-
+    GameState = state(Board, Players, CurrentPlayer),
+    write('Select a row to rotate: '),
+    read(RowIndex),
+    write('Rotating row...'), nl,
+    rotate_row(RowIndex, Board, RotatedBoard),
+    write('Row index: '), write(RowIndex), nl,
+    RotatedGameState = state(RotatedBoard, Players, CurrentPlayer),
+    write(RotatedBoard), nl,
+    display_game(RotatedGameState),
+    write('Tile rotated successfully!'), nl.
+% ----------------------------------------------------------------------------------------------- %
+

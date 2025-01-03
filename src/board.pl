@@ -2,12 +2,13 @@
 % ======     THIS FILE CONTAINS THE PREDICATES RELATED TO TILES AND BOARD GENERATION       ====== %
 % =============================================================================================== %
 
-:- module(board, [display_board/1]).
+:- module(board, [display_board/1, rotate_row/3]).
 % ----------------------------------------------------------------------------------------------- %
 
 
 % ---------------------------------------- INCLUDES --------------------------------------------- %
 :- use_module('display.pl').
+:- use_module('list.pl').
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -51,11 +52,27 @@ full(Char) :- char_code(Char, 0x2588). % █
 
 
 
+% -------------------------------------- ROTATE A ROW ------------------------------------------- %
+% --> Main predicate to rotate a row.
+rotate_row(RowIndex, Board, RotatedBoard) :-
+    idx(RowIndex, Board, Row), % - Get the row to rotate.
+    rotate_tile_list(Row, RotatedRow), % - Rotate the row.
+    replace_index(RowIndex, RotatedRow, Board, RotatedBoard). % - Replace the row in the board. 
+
+% --> Helper to rotate a list of tiles.
+rotate_tile_list([], []).
+rotate_tile_list([Tile | Rest], [RotatedTile | RotatedRest]) :-
+    rotate_tile(Tile, RotatedTile), % - Rotate the tile.
+    write(RotatedTile), nl,
+    rotate_tile_list(Rest, RotatedRest). % - Recurse for the rest of the tiles.
+    
+% ----------------------------------------------------------------------------------------------- %
+
+
 % -------------------------------------- ROTATE A TILE ------------------------------------------ %
 % --> Main predicate to rotate a tile.
-rotate_tile(tile(Sides, Rotation), tile(RotatedSides, NewRotation)) :-
-    NewRotation is (Rotation + 90) mod 360, % - Rotating 90 degrees, this may be changed later to handle both direction rotations.
-    rotated_sides(Sides, Rotation, RotatedSides).
+rotate_tile(tile(Sides, Rotation), tile(Sides, NewRotation)) :-
+    NewRotation is (Rotation + 90) mod 360. % - Rotating 90 degrees, this may be changed later to handle both direction rotations.
 % ----------------------------------------------------------------------------------------------- %
 
 % ------------------------------------- GET ROTATED SIDES --------------------------------------- %
@@ -81,7 +98,6 @@ rotate_list(List, Steps, RotatedList) :-
 % -------------------------------------- DISPLAY BOARD ------------------------------------------ %
 % --> Main predicate to display the entire board.
 display_board(Board) :-
-    clear_screen,
     print_title,
     length(Board, RowCount), % - Determine the number of rows.
     RowWidth is RowCount * 12, % - Width based on the number of tiles.
@@ -102,7 +118,7 @@ print_top_border(RowWidth) :-
     write(Brown), write(TxtBrown), write(TopLeft),
     print_row_with_crosses(Horizontal, Tup, RowWidth),
     write(TopRight), write(Reset), % Write the right corner
-    nl. % Newline
+    nl.
 
 % --> Print the bottom border.
 print_bottom_border(RowWidth) :-

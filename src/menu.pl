@@ -1,11 +1,11 @@
 
-:- module(menu, [main_menu/0]).
 
+:- module(menu, [main_menu/0]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
 
-% ------------------------------------ MENU  ------------------------------------ %
+% ---------------------------------------------- MENU  ------------------------------------------ %
 % Main menu logic
 main_menu:-
     Options = ['Start Game', 'Settings', 'Exit'],
@@ -59,21 +59,33 @@ valid_choice(Choice, Len, Options, Title) :-
 
 valid_choice(_, _, Options, Title) :-
     write('Invalid choice. Try again.\n'),
-    menu_loop(Options, Title). 
+    menu_loop(Options, Title).
+% ----------------------------------------------------------------------------------------------- %
 
-% ------------------------------------ SETTINGS MENU ------------------------------------ %
+
+
+% ---------------------------------------- SETTINGS MENU ---------------------------------------- %
 settings_menu :-
     Options = ['Board size', 'Number of pieces', 'Score to Win', 'Back to Main Menu'],
     Title = 'Settings',
     menu_loop(Options, Title).
-% ------------------------------------ START GAME MENU ------------------------------------ %
+% ----------------------------------------------------------------------------------------------- %
+
+
+
+
+% --------------------------------------- START GAME MENU --------------------------------------- %
 
 start_game_menu :-
     Options = ['Human vs Human', 'Human vs Bot', 'Bot vs Bot', 'Back to Main Menu'],
     Title = 'Start Game',
     menu_loop(Options, Title).
+% ----------------------------------------------------------------------------------------------- %
 
-% ------------------------------------ HANDLE SELECTION ------------------------------------ %
+
+
+% ------------------------------------ HANDLE MENU SELECTION ------------------------------------ %
+
 % Handle each menu option
 handle_selection('Start Game') :-
     write('Let\'s go choose your match...\n'),
@@ -103,3 +115,4 @@ handle_selection('Human vs Bot') :-
 handle_selection('Bot vs Bot') :-
     write('Starting bot vs bot...\n'),
     start_game_menu.
+% ----------------------------------------------------------------------------------------------- %
