@@ -59,43 +59,13 @@ valid_choice(Choice, Len, Options, Title) :-
 
 valid_choice(_, _, Options, Title) :-
     write('Invalid choice. Try again.\n'),
-    menu_loop(Options, Title).
-
-% Handle each menu option
-handle_selection('Start Game') :-
-    write('Let\'s go choose your match...\n'),
-    start_game_menu.
-
-handle_selection('Settings') :-
-    write('Opening settings...\n'),
-    settings_menu.
-
-handle_selection('Exit') :-
-    write('Exiting the game. Goodbye!\n'),
-    halt.
-    
+    menu_loop(Options, Title). 
 
 % ------------------------------------ SETTINGS MENU ------------------------------------ %
 settings_menu :-
     Options = ['Board size', 'Number of pieces', 'Score to Win', 'Back to Main Menu'],
     Title = 'Settings',
     menu_loop(Options, Title).
-
-handle_selection('Board size') :-
-    write('Here you can choose the height and width of your board.\n'),
-    settings_menu.
-
-handle_selection('Number of pieces') :-
-    write('Here you can choose the number of game pieces per player.\n'),
-    settings_menu.
-
-handle_selection('Score to Win') :-
-    write('Here you can choose the number of pieces necessary to win.\n'),
-    settings_menu.
-
-handle_selection('Back to Main Menu') :-
-    main_menu.
-
 % ------------------------------------ START GAME MENU ------------------------------------ %
 
 start_game_menu :-
@@ -103,19 +73,33 @@ start_game_menu :-
     Title = 'Start Game',
     menu_loop(Options, Title).
 
-handle_selection('Human vs Human') :-
-    write('Starting the game...\n').
-    
-
-handle_selection('Human vs Bot') :-
-    write('Starting Human vs Bot...\n'),
-    % Add logic for loading a game
+% ------------------------------------ HANDLE SELECTION ------------------------------------ %
+% Handle each menu option
+handle_selection('Start Game') :-
+    write('Let\'s go choose your match...\n'),
     start_game_menu.
-
-handle_selection('Bot vs Bot') :-
-    write('Starting bot vs bot...\n'),
-    % Add logic for multiplayer
-    start_game_menu.
-
+handle_selection('Settings') :-
+    write('Opening settings...\n'),
+    settings_menu.
+handle_selection('Exit') :-
+    write('Exiting the game. Goodbye!\n'),
+    halt.
+handle_selection('Board size') :-
+    write('Here you can choose the height and width of your board.\n'),
+    settings_menu.
+handle_selection('Number of pieces') :-
+    write('Here you can choose the number of game pieces per player.\n'),
+    settings_menu.
+handle_selection('Score to Win') :-
+    write('Here you can choose the number of pieces necessary to win.\n'),
+    settings_menu.
 handle_selection('Back to Main Menu') :-
     main_menu.
+handle_selection('Human vs Human') :-
+    write('Starting the game...\n').
+handle_selection('Human vs Bot') :-
+    write('Starting Human vs Bot...\n'),
+    start_game_menu.
+handle_selection('Bot vs Bot') :-
+    write('Starting bot vs bot...\n'),
+    start_game_menu.
