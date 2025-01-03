@@ -1,8 +1,9 @@
 
-:- use_module('board.pl').
-
-
 :- module(menu, [main_menu/0]).
+
+
+:- use_module('board.pl').
+:- use_module('list.pl').
 
 % ------------------------------------ MENU  ------------------------------------ %
 % Main menu logic
@@ -45,13 +46,6 @@ validate_choice(_, Choice) :-
     write('Invalid input. Please enter a number.\n'),
     read_choice(Choice).
 
-% Custom nth1/3 to avoid using cuts
-nth1_custom(1, [Element | _], Element).
-nth1_custom(N, [_ | Rest], Element) :-
-    N > 1,
-    N1 is N - 1,
-    nth1_custom(N1, Rest, Element).
-
 % Process the selected option
 process_choice(Choice, Options, Title) :-
     length(Options, Len),
@@ -60,7 +54,7 @@ process_choice(Choice, Options, Title) :-
 valid_choice(Choice, Len, Options, Title) :-
     Choice > 0,
     Choice =< Len,
-    nth1_custom(Choice, Options, SelectedOption),
+    idx(Choice, Options, SelectedOption),
     handle_selection(SelectedOption).
 
 valid_choice(_, _, Options, Title) :-
@@ -111,7 +105,6 @@ start_game_menu :-
 
 handle_selection('Human vs Human') :-
     write('Starting the game...\n').
-    
     
 
 handle_selection('Human vs Bot') :-
