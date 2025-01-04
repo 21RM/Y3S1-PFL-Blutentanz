@@ -108,6 +108,25 @@ create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
 initialize_players(Player1Type, Player2Type, Player1Pieces, Player2Pieces, [Player1, Player2]) :-
     Player1 = player(player1, Player1Type, orange, Player1Pieces),
     Player2 = player(player2, Player2Type, blue, Player2Pieces).
+
+% Converts a single character atom (letter) to uppercase.
+to_uppercase(Lower, Upper) :-
+    char_code(Lower, CodeLower),
+    char_code('a', CodeA),
+    char_code('z', CodeZ),
+    char_code('A', CodeAUpper),
+    to_uppercase_helper(CodeLower, CodeA, CodeZ, CodeAUpper, Upper).
+
+% Helper predicate for conversion logic.
+to_uppercase_helper(CodeLower, CodeA, CodeZ, CodeAUpper, Upper) :-
+    CodeLower >= CodeA,
+    CodeLower =< CodeZ,
+    CodeUpper is CodeAUpper + (CodeLower - CodeA),
+    char_code(Upper, CodeUpper).
+
+to_uppercase_helper(CodeLower, CodeA, CodeZ, _, Upper) :-
+    (CodeLower < CodeA; CodeLower > CodeZ), % Not a lowercase letter
+    char_code(Upper, CodeLower).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -123,31 +142,63 @@ display_game(state(Board, Players, CurrentPlayer)) :-
 
 
 % ---------------------------------------- GAME LOOP -------------------------------------------- %
+% --> Main game loop.
 game_loop(GameState) :-
-    display_game(GameState), % - presented up, in its own comment encapsulation.
-    GameState = state(_,_, CurrentPlayer),
+    game_over(GameState, Winner),
+    handle_game_over(Winner, GameState),
+    !.
 
-    % -> Execute the current player's turn
-    take_turn(CurrentPlayer, GameState, UpdatedGameState).
+game_loop(GameState) :-
+    take_turn(GameState, UpdatedGameState),
+    game_loop(UpdatedGameState).
+
+game_over(_, none).
+game_over(GameState, Winner) :-
+    GameState = state(Board, Players, CurrentPlayer),
+    %check_win_condition(Board, Players, true). TODO: Implement the win condition.
+    Winner = none.
+
+handle_game_over(Winner, _) :-
+    Winner \= none.
+    %TODO: Implement the game over handling.
+
+
+
 % ----------------------------------------------------------------------------------------------- %
 
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
-take_turn(CurrentPlayer, GameState, UpdatedGameState) :-
-    write('Rotation Phase for '), % display_current_player(CurrentPlayer), nl, (TODO::Display player name)
+take_turn(GameState, UpdatedGameState) :-
     rotation_phase(GameState, RotatedGameState),
-    UpdatedGameState = RotatedGameState.
+    UpdatedGameState = RotatedGameState,
+    display_game(UpdatedGameState).
+    % TODO: Implement the move phase.
 
 % --> Rotation Phase.
-rotation_phase(GameState, RotatedGameState) :-
+rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
     GameState = state(Board, Players, CurrentPlayer),
-    write('Select a row to rotate: '),
-    read(RowIndex),
-    write('Rotating row...'), nl,
-    rotate_row(RowIndex, Board, RotatedBoard),
-    write('Row index: '), write(RowIndex), nl,
-    RotatedGameState = state(RotatedBoard, Players, CurrentPlayer),
-    write(RotatedBoard), nl,
-    display_game(RotatedGameState),
-    write('Tile rotated successfully!'), nl.
+    write('Rotate a row (numbers), or a column (letters): '),
+    read(Selection),
+    handle_rotation_choice(Selection, GameState, RotatedGameState).
+
+% --> Handle the rotation choice.
+handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer), state(RotatedBoard, Players, CurrentPlayer)) :-
+    integer(Selection),
+    rotate_row(Selection, Board, RotatedBoard).
+
+handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer), state(RotatedBoard, Players, CurrentPlayer)) :-
+    atom(Selection),
+    column_letter_to_index(Selection, ColumnIndex),
+    rotate_column(ColumnIndex, Board, RotatedBoard).
+
+handle_rotation_choice(_, GameState, RotatedGameState) :-
+    write('Invalid input. Please enter a valid row number or column letter.\n'),
+    rotation_phase(GameState, RotatedGameState).
+
+% --> Convert a column letter to an index.
+column_letter_to_index(ColumnLetter, ColumnIndex) :-
+    to_uppercase(ColumnLetter, UppercaseLetter),
+    char_code('A', ACode),
+    char_code(UppercaseLetter, LetterCode),
+    ColumnIndex is LetterCode - ACode + 1.
 % ----------------------------------------------------------------------------------------------- %
 
