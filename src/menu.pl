@@ -42,7 +42,8 @@ validate_choice(Number, Choice) :-
     integer(Number),
     Choice = Number.
 
-validate_choice(_, Choice) :-
+validate_choice(Number, Choice) :-
+    \+ integer(Number),
     write('Invalid input. Please enter a number.\n'),
     read_choice(Choice).
 
@@ -58,6 +59,8 @@ valid_choice(Choice, Len, Options, Title) :-
     handle_selection(SelectedOption).
 
 valid_choice(_, _, Options, Title) :-
+    Choice <= 0,
+    Choice > Len,
     write('Invalid choice. Try again.\n'),
     menu_loop(Options, Title).
 % ----------------------------------------------------------------------------------------------- %
