@@ -4,10 +4,12 @@
 
 :- use_module('board.pl').
 :- use_module('list.pl').
+:- use_module('display.pl').
 
 % ---------------------------------------------- MENU  ------------------------------------------ %
 % Main menu logic
 main_menu:-
+    clear_screen,
     Options = ['Start Game', 'Settings', 'Exit'],
     Title = 'Main Menu',
     menu_loop(Options, Title).
@@ -67,6 +69,7 @@ valid_choice(_, _, Options, Title) :-
 
 % ---------------------------------------- SETTINGS MENU ---------------------------------------- %
 settings_menu :-
+    clear_screen,
     Options = ['Board size', 'Number of pieces', 'Score to Win', 'Back to Main Menu'],
     Title = 'Settings',
     menu_loop(Options, Title).
@@ -78,6 +81,7 @@ settings_menu :-
 % --------------------------------------- START GAME MENU --------------------------------------- %
 
 start_game_menu :-
+    clear_screen,
     Options = ['Human vs Human', 'Human vs Bot', 'Bot vs Bot', 'Back to Main Menu'],
     Title = 'Start Game',
     menu_loop(Options, Title).
@@ -95,6 +99,7 @@ handle_selection('Settings') :-
     write('Opening settings...\n'),
     settings_menu.
 handle_selection('Exit') :-
+    clear_screen,
     write('Exiting the game. Goodbye!\n'),
     halt.
 handle_selection('Board size') :-
