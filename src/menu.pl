@@ -1,6 +1,6 @@
 
 
-:- module(menu, [main_menu/0]).
+:- module(menu, [main_menu/0, display_menu_options/2]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
