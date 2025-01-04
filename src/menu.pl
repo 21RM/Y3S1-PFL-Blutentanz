@@ -59,8 +59,6 @@ valid_choice(Choice, Len, Options, Title) :-
     handle_selection(SelectedOption).
 
 valid_choice(_, _, Options, Title) :-
-    Choice <= 0,
-    Choice > Len,
     write('Invalid choice. Try again.\n'),
     menu_loop(Options, Title).
 % ----------------------------------------------------------------------------------------------- %
