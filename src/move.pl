@@ -17,7 +17,8 @@ display_possible_moves(GameState) :-
     display_menu_options(Directions, 1), % Display the directions
     write('Enter the number of the direction you want to move: '),
     read(DirectionIndex), % Read the direction index
-    Move = (Index, DirectionIndex), % Create the Move variable
+    idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
+    Move = (Index,DestPosition), % Create the Move variable
     move(GameState, Move, NewGameState). % Move the piece
 
 %------------------------------------------------------------------------------------------------------------
@@ -26,7 +27,6 @@ display_possible_moves(GameState) :-
 
 move(GameState, Move, NewGameState):-
     GameState = (Board, Players, CurrentPlayer),
-    valid_moves(GameState, ListOfMoves),
     change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer),
     change_players(Players, NewPlayer, NewPlayers),
     NewGameState = (Board, NewPlayers, NewPlayer).
@@ -44,11 +44,9 @@ change_players(Players, NewPlayer, NewPlayers):-
     NewPlayers = [Player1, NewPlayer ].
 
 change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer):-
-    Move = (PieceIndex, DirectionIndex),
+    Move = (Index, Position),
     CurrentPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
-    idx(PieceIndex, ListOfMoves, PieceMoves),
-    idx(DirectionIndex, PieceMoves, (Direction, DestPosition)),
-    replace_index(PieceIndex, DestPosition, Pieces, NewPieces)
+    replace_index(Index, Position, PlayerPieces, NewPieces)
     NewPlayer=(PlayerNum, PlayerType, PlayerColor, NewPieces).
 
 %-----------------------------------------------------------------------------------------------------------
