@@ -99,12 +99,15 @@ rotate_list(List, Steps, RotatedList) :-
 % --> Main predicate to display the entire board.
 display_board(Board) :-
     print_title,
-    length(Board, RowCount), % - Determine the number of rows.
-    RowWidth is RowCount * 12, % - Width based on the number of tiles.
+    idx(1, Board, Row), % - Get the first row.
+    length(Row, ColumnCount), % - Determine the number of rows.
+    RowWidth is ColumnCount * 12, % - Width based on the number of tiles.
+    print_top_numeration(RowWidth), % - Print the top numeration.
     print_top_border(RowWidth), % - Top border.
     display_rows(Board), % - Call to Helper function that displays all the rows.
     print_bottom_border(RowWidth). % - Bottom border.
 
+% --> Print top letter-columns assignement.
 
 % --> Print the top border.
 print_top_border(RowWidth) :-

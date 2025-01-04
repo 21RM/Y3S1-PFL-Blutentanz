@@ -22,27 +22,33 @@ standard_tile([empty, orange, blue, gray]).
 % --> Main predicate for the game.
 play :-
     main_menu,
+    write('Starting the game, and out of the menu...'), nl,
     TemporaryGameConfig = config(
         [5,5],
         [4, 4],
         [human, human]
     ),
     initial_state(TemporaryGameConfig, GameState), % Initialize the game state (TODO::Dynamic configurations).
+    write('state initialized...'), nl,
     display_game(GameState), % Display the board
-    game_play(GameState). % Start the game loop.
+    game_loop(GameState). % Start the game loop.
 % ----------------------------------------------------------------------------------------------- %
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
-initial_state(config([Player1Pieces,Player2Pieces],[Rows, Columns], [Player1Type, Player2Type]), GameState) :-
+initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type]), GameState) :-
+    write('Initializing game state...'), nl,
     % -> Initialize pieces.
     initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces),
+    write('Pieces initialized...'), nl,
     
     % -> Generate the board.
     generate_random_board(Rows, Columns, Board),
+    write('Board generated...'), nl,
 
     % -> Initialize players.
-    initialize_players(Player1Type, Player2Type,Player1Pieces,Player2Pieces, Players),
+    initialize_players(Player1Type, Player2Type, Player1Pieces, Player2Pieces, Players),
+    write('Players initialized...'), nl,
 
     % -> Set player 1 has starter, orange starts first.
     idx(1, Players, CurrentPlayer),
@@ -84,12 +90,14 @@ maplist(Predicate, [Head | Tail]) :-
 % --> Initialize Players, with types and colors.
 initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces):-
     create_pieces(Player1PiecesCount, Player1Pieces),
-    create_pieces(Player2PiecesCount, Player2Pieces).
+    create_pieces(Player2PiecesCount, Player2Pieces),
+    write('Pieces initialized...'), nl,
+    write(Player1Pieces), nl,
+    write(Player2Pieces), nl.
 
 
 % Base case: When Count is 0, return an empty list.
 create_pieces(0, []) :- !.
-
 % Recursive case: Add [[0,0], [0,0]] to the result list.
 create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
     Count > 0,
@@ -97,7 +105,7 @@ create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
     create_pieces(NextCount, Rest).
 
 % --> Initialize Players, with types and colors.
-initialize_players(Player1Type, Player2Type, Pieces, [Player1, Player2]) :-
+initialize_players(Player1Type, Player2Type, Player1Pieces, Player2Pieces, [Player1, Player2]) :-
     Player1 = player(player1, Player1Type, orange, Player1Pieces),
     Player2 = player(player2, Player2Type, blue, Player2Pieces).
 % ----------------------------------------------------------------------------------------------- %
