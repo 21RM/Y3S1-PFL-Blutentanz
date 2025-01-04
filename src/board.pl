@@ -102,7 +102,7 @@ display_board(Board) :-
     idx(1, Board, Row), % - Get the first row.
     length(Row, ColumnCount), % - Determine the number of rows.
     RowWidth is ColumnCount * 12, % - Width based on the number of tiles.
-    print_top_numeration(RowWidth), % - Print the top numeration.
+%    print_top_numeration(RowWidth), % - Print the top numeration.
     print_top_border(RowWidth), % - Top border.
     display_rows(Board), % - Call to Helper function that displays all the rows.
     print_bottom_border(RowWidth). % - Bottom border.
