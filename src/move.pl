@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/1]).
+:- module(move, [display_possible_moves/2]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -9,10 +9,8 @@
 %-----------------------------------------Display  moves-----------------------------------------------------
 
 % Reads an integer, retrieves the sublist at that index, and prints the directions.
-display_possible_moves(GameState) :-
-    write('displaying possible moves...'), nl,
+display_possible_moves(GameState,NewGameState) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
-    write('Valid moves: '), write(ListOfMoves), nl,
     write('Enter the number of the piece you want to move: '),
     read(Index), % Read the integer index
     idx(Index, ListOfMoves, MovesForPiece), % Retrieve the sublist at the given index (1-based indexing)
@@ -29,26 +27,25 @@ display_possible_moves(GameState) :-
 %---------------------------------Create GameState after motion----------------------------------------------
 
 move(GameState, Move, NewGameState):-
-    GameState = (Board, Players, CurrentPlayer),
+    GameState = state(Board, Players, CurrentPlayer),
     change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer),
     change_players(Players, NewPlayer, NewPlayers),
-    NewGameState = (Board, NewPlayers, NewPlayer).
+    NewGameState = state(Board, NewPlayers, NewPlayer).
 
 change_players(Players, NewPlayer, NewPlayers):-
-    NewPlayers = (Player1, Player2 ),
+    Players = [Player1, Player2],
     NewPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
     PlayerColor = orange,
     NewPlayers = [NewPlayer, Player2 ].
 
 change_players(Players, NewPlayer, NewPlayers):-
-    NewPlayers = (Player1, Player2 ),
+    Players = [Player1, Player2],
     NewPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
     PlayerColor = blue,
     NewPlayers = [Player1, NewPlayer ].
 
-change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer):-
-    Move = (Index, Position),
-    CurrentPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
+change_pieces((Index, Position),CurrentPlayer,ListOfMoves, NewPlayer):-
+    CurrentPlayer = player(PlayerNum, PlayerType, PlayerColor, PlayerPieces),
     replace_index(Index, Position, PlayerPieces, NewPieces),
     NewPlayer=(PlayerNum, PlayerType, PlayerColor, NewPieces).
 
@@ -64,14 +61,19 @@ valid_moves(GameState, ListOfMoves) :-
 
 % Iterates through the list of Pieces and calculates all possible moves with directions and destination indices.
 all_moves(_, [], []). % Base case: No pieces left to process.
-all_moves(GameState, [[[0, 0], [0, 0]] | RestPieces], [MovesForPiece | RemainingMoves]) :-
+all_moves(GameState, [[[0, 0], [0, 0]] | RestPieces], [FormattedPositions | RemainingMoves]) :-
+    possible_entry_position(GameState, EntryPositions), % Get all possible entry positions
+    findall(
+        (FormattedPosition, Position),
+        (
+            member(Position, EntryPositions), % Iterate through all entry positions
+            can_move(GameState, Position), % Check if move is valid
+            format_position(GameState,Position, FormattedPosition) % Format the position
+        ),
+        FormattedPositions
+    ),
+    all_moves(GameState, RestPieces, RemainingMoves). % Recurse for the rest of the pieces
 
-    possible_entry_position(GameState, EntryPositions), % Find valid entry positions
-    can_place(GameState, EntryPositions, MovesForPiece).
-
-
-    % Recurse for the rest of the pieces
-    all_moves(GameState, RestPieces, RemainingMoves).
 all_moves(GameState, [Piece | RestPieces], [MovesForPiece | RemainingMoves]) :-
     % Calculate moves in all four directions for the current piece
     findall(
@@ -79,13 +81,26 @@ all_moves(GameState, [Piece | RestPieces], [MovesForPiece | RemainingMoves]) :-
         (
             member(Direction, [up, down, left, right]), % Test each direction
             move_in_direction(Piece, Direction, DestPosition), % Calculate destination
-            can_place(GameState, DestPosition) % Check if move is valid
+            can_move(GameState, DestPosition) % Check if move is valid
         ),
         MovesForPiece
     ),
     % Recurse for the rest of the pieces
     all_moves(GameState, RestPieces, RemainingMoves).
 
+% Format the position with column letters and row numbers
+format_position(state(Board,_,_),[[ColumnIndex, RowIndex], TilePosition], FormattedPosition) :-
+    get_dest_color(Board, [[ColumnIndex, RowIndex], TilePosition], Color),
+    column_letter(ColumnIndex, Letter), % Convert column index to letter
+    number_codes(RowIndex, Codes), % Converts the number to a list of character codes
+    atom_codes(RowAtom, Codes),
+    atom_concat(Letter, RowAtom, LetterNumber),% Combine letter and row index as an atom
+    atom_concat('-', Color, NewColor), % Combine letter and row index as an atom
+    atom_concat(LetterNumber, NewColor, FormattedPosition). % Combine letter and row index as an atom
+
+column_letter(Index, Letter) :-
+    Code is Index + 64, % Convert 1-based index to ASCII ('A' = 65)
+    char_code(Letter, Code).
 
 % Calculates the new position based on the direction.
 move_in_direction([[BoardX,BoardY],[TileX,TileY]], up, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
@@ -122,7 +137,6 @@ can_place(GameState, EntryPositions, MovesForPiece) :-
 
 %check if the move is valid
 can_move(GameState, DestInd) :-
-    write('Entry position: '), write(DestInd), nl,
     GameState = state(Board, Players, player(_, _, PlayerColor, _)),
     get_dest_color(Board, DestInd, DestColor),
     validate_color(PlayerColor,DestColor),
@@ -132,9 +146,8 @@ can_move(GameState, DestInd) :-
 validate_color(PlayerColor,DestColor) :-
     PlayerColor = orange,
     DestColor \= blue,
-    DestColor \= empty,
-    write('Player color: '), write(PlayerColor), write(' Destination color: '), write(DestColor), nl.
-validate_color(PlayerColor,DestPiece) :-
+    DestColor \= empty.
+validate_color(PlayerColor,DestColor) :-
     PlayerColor = blue,
     DestColor \= orange,
     DestColor \= empty.
@@ -196,15 +209,30 @@ get_color( TileX, TileY, ColorInd):-
     ColorInd=2.
 
 possible_entry_position(GameState, EntryPositions) :-
-    GameState = state(Board, _, _),
+    GameState = state(Board, _, player(_, _, Color, _)), % Extract the board and player color
     length(Board, Height), % Get the height of the board
     idx(1, Board, FirstRow), % Get the first row
     length(FirstRow, Width), % Get the width of the board
+    Color = orange, % Orange player
     findall(
         [[X, 1], [TileX, TileY]],
         (
-            inbetween(1, Height, X), % Generate column indices
+            inbetween(1, Width, X), % Generate column indices
             member([TileX, TileY], [[1, 1], [2, 1]]) % Positions within the tile
+        ),
+        EntryPositions
+    ).
+possible_entry_position(GameState, EntryPositions) :-
+    GameState = state(Board, _, player(_, _, Color, _)), % Extract the board and player color
+    length(Board, Height), % Get the height of the board
+    idx(1, Board, FirstRow), % Get the first row
+    length(FirstRow, Width), % Get the width of the board
+    Color = blue, % blue player
+    findall(
+        [[X, Height], [TileX, TileY]],
+        (
+            inbetween(1, Width, X), % Generate column indices
+            member([TileX, TileY], [[1, 2], [2, 2]]) % Positions within the tile
         ),
         EntryPositions
     ).
