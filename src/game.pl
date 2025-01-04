@@ -150,6 +150,7 @@ game_loop(GameState) :-
 
 game_loop(GameState) :-
     take_turn(GameState, UpdatedGameState),
+    write('looping...'), nl,
     game_loop(UpdatedGameState).
 
 game_over(_, none).
@@ -170,8 +171,8 @@ handle_game_over(Winner, _) :-
 take_turn(GameState, UpdatedGameState) :-
     rotation_phase(GameState, RotatedGameState),
     UpdatedGameState = RotatedGameState,
-    display_game(UpdatedGameState).
-    % TODO: Implement the move phase.
+    display_game(UpdatedGameState),
+    display_possible_moves(UpdatedGameState).
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.

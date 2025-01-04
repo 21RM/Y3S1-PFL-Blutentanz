@@ -2,7 +2,7 @@
 % ======     THIS FILE CONTAINS THE PREDICATES RELATED TO TILES AND BOARD GENERATION       ====== %
 % =============================================================================================== %
 
-:- module(board, [display_board/1, rotate_row/3, rotate_column/3]).
+:- module(board, [display_board/1, rotate_row/3, rotate_column/3, rotated_sides/3]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -114,6 +114,7 @@ rotate_list(List, Steps, RotatedList) :-
     NextSteps is Steps - 1,                 % Decrement the number of steps
     rotate_list(TempList, NextSteps, RotatedList). % Recur for the remaining steps
 % ----------------------------------------------------------------------------------------------- %
+
 
 
 

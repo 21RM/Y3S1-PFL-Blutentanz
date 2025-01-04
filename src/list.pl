@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3, replace_index/4]).
+:- module(myList, [idx/3, replace_index/4, inbetween/3]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -19,4 +19,13 @@ replace_index(1, NewElement, [_|Tail], [NewElement|Tail]).
 replace_index(Index, NewElement, [Head|Tail], [Head|NewTail]) :-
     Index > 1,
     NextIndex is Index - 1,
-    replace_index(NextIndex, NewElement, Tail, NewTail). 
+    replace_index(NextIndex, NewElement, Tail, NewTail).
+
+% between(+Low, +High, -Value)
+inbetween(Low, High, Value) :-
+    Low =< High,
+    Value = Low.
+inbetween(Low, High, Value) :-
+    Low < High,
+    NextLow is Low + 1,
+    inbetween(NextLow, High, Value).
