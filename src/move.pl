@@ -4,13 +4,33 @@
 :- use_module('board.pl').
 :- use_module('list.pl').
 :- use_module('menu.pl').
+:- use_module('random.pl').
 :- use_module(library(lists), [reverse/2]).
 
 %-----------------------------------------Display  moves-----------------------------------------------------
 
-% Reads an integer, retrieves the sublist at that index, and prints the directions.
+
 display_possible_moves(GameState,NewGameState) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
+    no_moves(ListOfMoves, GameState, NewGameState).
+
+
+
+%------------------------------------------------------------------------------------------------------------
+
+no_moves(ListOfMoves,GameState,NewGameState):-
+    length(ListOfMoves, Len),
+    generate_empty_lists(Len, Result),
+    ListOfMoves = Result,
+    write('You can\'t move any pieces after the rotation you just made. Your turn as ended.'), nl,
+    write('Skipping turn...'), nl,
+    busy_wait(300000000),
+    NewGameState = GameState.
+
+no_moves(ListOfMoves,GameState, NewGameState):-
+    length(ListOfMoves, Len),
+    generate_empty_lists(Len, Result),
+    ListOfMoves \= Result,
     validate_index(ListOfMoves,Index),
     idx(Index, ListOfMoves, MovesForPiece), % Retrieve the sublist at the given index (1-based indexing)
     findall(Direction, member((Direction, _), MovesForPiece), Directions), % Extract directions
@@ -20,7 +40,6 @@ display_possible_moves(GameState,NewGameState) :-
     length(Options,NumOptions),
     move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). % Check the user input
 
-%------------------------------------------------------------------------------------------------------------
 validate_index(Options, Choice):-
     write('Enter the number of the piece you want to move '),
     read(Number),
@@ -70,8 +89,7 @@ move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameSta
     DirectionIndex < NumOptions, % Check if the direction index is valid
     idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
     Move = (Index,DestPosition), % Create the Move variable
-    move(GameState, Move, NewGameState), % Move the piece
-    write('Finish'), nl.
+    move(GameState, Move, NewGameState). % Move the piece 
 move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex = NumOptions, % Check if the direction index is valid
     display_possible_moves(GameState,NewGameState). % Display the possible moves again
