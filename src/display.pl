@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(display, [clear_screen/0, print_title/0]).
+:- module(display, [clear_screen/0, print_title/0, validate_input/3, display_score/5]).
 
 % --> Define block characters for the "P"
 block_full(Char) :- char_code(Char, 0x2588). % - █ Full block.
@@ -22,6 +22,8 @@ text_blue('\e[38;2;0;0;255m').  % - Blue.
 text_dark_grey('\e[38;2;35;35;35m').  % - Dark Grey.
 bg_light_brown('\e[48;2;235;235;210m').      % - Light wood.
 bg_brown('\e[48;2;189;119;69m').       % - Medium wood.
+bg_orange('\e[48;2;225;135;0m').      % - Orange.
+bg_blue('\e[48;2;0;0;255m').          % - Blue.
 text_brown('\e[38;2;189;119;69m').  % - Text in brown.
 reset_color('\e[0m').
 % ----------------------------------------------------------------------------------------------- %
@@ -32,6 +34,20 @@ clear_screen :-
     format("\e[3J\e[2J\e[H", []),
     format("\e[2J\e[H", []),
     nl.
+
+validate_input(MaxNumber, Text, ReturnNumber) :-
+    write(Text),
+    read(Input),
+    validate_input_value(Input, MaxNumber, Text, ReturnNumber).
+
+validate_input_value(Input, MaxNumber, _, Input) :-
+    integer(Input),
+    Input >= 1,
+    Input =< MaxNumber.
+
+validate_input_value(_, MaxNumber, Text, ReturnNumber) :-
+    write('Invalid input. Please enter a number between 1 and '), write(MaxNumber), nl,
+    validate_input(MaxNumber, Text, ReturnNumber).
 
 
 % --> Print the rows of the letter
@@ -116,8 +132,27 @@ print_title :-
     write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),
     write(BGLbrown), format("                                                                           ", []), write(Reset),
     write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
-    print_ascii(Rows),
+    print_ascii(Rows), nl.
+
+display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, PiecesToWin) :-
+    Color = orange,
+    bg_light_brown(BGLbrown),
+    bg_brown(BGbrown),
+    bg_orange(Orange),
+    text_brown(TxtBrown),
+    reset_color(Reset),
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(Orange), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
     nl, nl.
+display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, PiecesToWin) :-
+    Color = blue,
+    bg_light_brown(BGLbrown),
+    bg_brown(BGbrown),
+    bg_blue(Blue),
+    text_brown(TxtBrown),
+    reset_color(Reset),
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(OBlue), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    nl, nl.
+
 
 ascii_title([[Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Full, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full, Empty, Empty, '_', ',', '-', '.', '_', Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full],    [Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '/', Empty, '\\', '_', '/', Empty, '\\', Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty],    [Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '>', '-', '(', '_', ')', '-', '<', Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty],    [Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '\\', '_', '/', Empty, '\\', '_', '/', Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty],    [Full, Full, Empty, Empty, Empty, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, '`', '-', '\'', Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty],    [Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Full, Full, Full, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Empty, '|', Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full]]) :-
     block_full(Full),
