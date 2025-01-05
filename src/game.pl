@@ -16,20 +16,14 @@
 standard_tile([empty, orange, blue, gray]).
 % ----------------------------------------------------------------------------------------------- %
 test:-
-    TestGameState = state(
-        [ % Board
-            [tile([orange, gray, gray, orange], 0), tile([orange, orange, gray, gray], 0)],
-            [tile([orange, orange, gray, blue], 0), tile([gray, blue, orange, orange], 0)]
-        ],
-        [ % Players
-            player(player1, human, orange, [[[2, 2], [2, 2]], [[1, 3], [1, 1]]]),
-            player(player2, human, blue, [[[0, 0], [0, 0]], [[2, 0], [1, 1]]])
-        ],
-        player(player1, human, orange, [[[2, 2], [2, 2]], [[1, 3], [1, 1]]]),% Current player
-        [2, 2] % Pieces to win
-    ),
-    display_game(TestGameState),
-    game_loop(TestGameState).
+    Board=        [ % Board
+    [tile([orange, gray, gray, orange], 0), tile([orange, orange, gray, gray], 0)],
+    [tile([orange, orange, gray, blue], 0), tile([gray, blue, orange, orange], 0)]],
+    Players=        [ % Players
+    player(player1, human, orange, [piece([[2, 2], [2, 2]],1), piece([[1, 1], [1, 1]],2)]),
+    player(player2, human, blue, [piece([[0, 0], [0, 0]],1), piece([[2, 0], [1, 1]],2)])
+    ],
+    get_score(Board,Players, ScorePlayer1, ScorePlayer2).
 
 
 % --------------------------------------- MAIN PREDICATE ---------------------------------------- %
@@ -54,7 +48,7 @@ play :-
 initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin), GameState) :-
     write('Initializing game state...'), nl,
     % -> Initialize pieces.
-    initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces),
+    initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces, Player2Pieces),
     write('Pieces initialized...'), nl,
     
     % -> Generate the board.
@@ -105,20 +99,19 @@ maplist(Predicate, [Head | Tail]) :-
 
 % --> Initialize Players, with types and colors.
 initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces):-
-    create_pieces(Player1PiecesCount, Player1Pieces),
-    create_pieces(Player2PiecesCount, Player2Pieces),
-    write('Pieces initialized...'), nl,
-    write(Player1Pieces), nl,
-    write(Player2Pieces), nl.
+    create_pieces(1, Player1PiecesCount, Player1Pieces),
+    create_pieces(1, Player2PiecesCount, Player2Pieces).
 
 
 % Base case: When Count is 0, return an empty list.
-create_pieces(0, []) :- !.
+create_pieces(_, 0, []) :- !.
 % Recursive case: Add [[0,0], [0,0]] to the result list.
-create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
+create_pieces(Id, Count, [Piece | Rest]) :-
     Count > 0,
+    Piece = piece([[0, 0], [0, 0]], Id),
     NextCount is Count - 1,
-    create_pieces(NextCount, Rest).
+    NextId is Id + 1,
+    create_pieces(NextId, NextCount, Rest).
 
 % --> Initialize Players, with types and colors.
 initialize_players(Player1Type, Player2Type, Player1Pieces, Player2Pieces, [Player1, Player2]) :-
@@ -152,7 +145,8 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
     clear_screen,
     %display_current_player(CurrentPlayer),
     %display_player_info(Players),
-    display_board(Board).
+    display_board(Board),
+    display_bench(Board, CurrentPlayer).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -161,12 +155,15 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
 % --> Main game loop.
 check_end_game(GameState) :-
     game_over(GameState, Winner),
+    write('Winner is: '), write(Winner), nl,
     handle_game_over(Winner, GameState).
 
 game_loop(GameState) :-
     take_turn(GameState, UpdatedGameState),
     check_end_game(UpdatedGameState),
-    game_loop(UpdatedGameState).
+    switch_player(UpdatedGameState, NewGameState),
+    display_game(NewGameState),
+    game_loop(NewGameState).
 
 game_over(GameState, Winner) :-
     GameState = state(Board, Players, CurrentPlayer, [PiecesToWinPlayer1, PiecesToWinPlayer2]),
@@ -187,7 +184,9 @@ check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2,
     ScorePlayer2 < PiecesToWinPlayer2,
     Winner = none.
 
-
+handle_game_over(Winner, _) :-
+    Winner = none,
+    !.
 handle_game_over(Winner, _) :-
     Winner \= none,
     write('Winner is: '), write(Winner), nl,
@@ -202,11 +201,11 @@ take_turn(GameState, NewGameState) :-
     rotation_phase(GameState, RotatedGameState),
     UpdatedGameState = RotatedGameState,
     display_game(UpdatedGameState),
-    display_possible_moves(GameState,NewGameState).
+    display_possible_moves(UpdatedGameState,NewGameState).
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
-    write('Rotate a row (numbers), or a column (letters): '),
+    write('Rotate a row (numbers), or a column (letters) '),
     read(Selection),
     handle_rotation_choice(Selection, GameState, RotatedGameState).
 
@@ -230,6 +229,14 @@ column_letter_to_index(ColumnLetter, ColumnIndex) :-
     char_code('A', ACode),
     char_code(UppercaseLetter, LetterCode),
     ColumnIndex is LetterCode - ACode + 1.
+
+% --> helper to switch player.
+switch_player(state(Board, [Player1, Player2], CurrentPlayer, PiecesToWin), state(Board, [Player1, Player2], NextPlayer,PiecesToWin)) :-
+    CurrentPlayer = Player1,
+    NextPlayer = Player2.
+switch_player(state(Board, [Player1, Player2], CurrentPlayer, PiecesToWin), state(Board, [Player1, Player2], NextPlayer, PiecesToWin)) :-
+    CurrentPlayer = Player2,
+    NextPlayer = Player1.
 % ----------------------------------------------------------------------------------------------- %
 
 %-------------------------------------------- Score ----------------------------------------------%
@@ -245,15 +252,15 @@ get_score(Board,Players, ScorePlayer1, ScorePlayer2) :-
 
 % Counts how many pieces in the Pieces list are equal to the given Position.
 count_pieces(_, [], 0). % Base case: No pieces left to process.
-count_pieces(Position, [[[X,Y],Tyle]| Rest], Count) :-
+count_pieces(Position, [piece([[X,Y],Tyle], _)| Rest], Count) :-
     [[X,Y],Tyle] \= [[0,0],[0,0]], % Check if the current piece matches Position.
     Position = [[_,Y],_],
     count_pieces(Position, Rest, RestCount), % Count in the remaining list
     Count is RestCount + 1. % Increment count if the current piece matches Position.
-count_pieces(Position, [[[_,Y],_] | Rest], Count) :-
+count_pieces(Position, [piece([[_,Y],_], _) | Rest], Count) :-
     Position \= [[_,Y],_],
     count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
-count_pieces(Position, [[[X,Y],Tyle] | Rest], Count) :-
+count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
     [[X,Y],Tyle] = [[0,0],[0,0]],
     count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
 

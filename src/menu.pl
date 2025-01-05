@@ -93,10 +93,8 @@ start_game_menu :-
 
 % Handle each menu option
 handle_selection('Start Game') :-
-    write('Let\'s go choose your match...\n'),
     start_game_menu.
 handle_selection('Settings') :-
-    write('Opening settings...\n'),
     settings_menu.
 handle_selection('Exit') :-
     clear_screen,
@@ -113,8 +111,7 @@ handle_selection('Score to Win') :-
     settings_menu.
 handle_selection('Back to Main Menu') :-
     main_menu.
-handle_selection('Human vs Human') :-
-    write('Starting the game...\n').
+handle_selection('Human vs Human').
 handle_selection('Human vs Bot') :-
     write('Starting Human vs Bot...\n'),
     start_game_menu.
