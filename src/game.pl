@@ -15,7 +15,15 @@
 % --> Define the standard tile.
 standard_tile([empty, orange, blue, gray]).
 % ----------------------------------------------------------------------------------------------- %
-
+test:-
+    Board=        [ % Board
+    [tile([orange, gray, gray, orange], 0), tile([orange, orange, gray, gray], 0)],
+    [tile([orange, orange, gray, blue], 0), tile([gray, blue, orange, orange], 0)]],
+    Players=        [ % Players
+    player(player1, human, orange, [piece([[2, 2], [2, 2]],1), piece([[1, 1], [1, 1]],2)]),
+    player(player2, human, blue, [piece([[0, 0], [0, 0]],1), piece([[2, 0], [1, 1]],2)])
+    ],
+    get_score(Board,Players, ScorePlayer1, ScorePlayer2).
 
 
 % --------------------------------------- MAIN PREDICATE ---------------------------------------- %
@@ -26,7 +34,8 @@ play :-
     TemporaryGameConfig = config(
         [5,5],
         [4, 4],
-        [human, human]
+        [human, human],
+        [4, 4]
     ),
     initial_state(TemporaryGameConfig, GameState), % Initialize the game state (TODO::Dynamic configurations).
     write('state initialized...'), nl,
@@ -36,7 +45,7 @@ play :-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
-initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type]), GameState) :-
+initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin), GameState) :-
     write('Initializing game state...'), nl,
     % -> Initialize pieces.
     initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces, Player2Pieces),
@@ -53,8 +62,9 @@ initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [P
     % -> Set player 1 has starter, orange starts first.
     idx(1, Players, CurrentPlayer),
 
+
     % -> Return value GameState, contains Board, Players and the player who starts
-    GameState = state(Board, Players, CurrentPlayer).
+    GameState = state(Board, Players, CurrentPlayer, PiecesToWin).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -131,7 +141,7 @@ to_uppercase_helper(CodeLower, CodeA, CodeZ, _, Upper) :-
 
 % ---------------------------------------- DISPLAY GAME ----------------------------------------- %
 % --> Main display game predicate.
-display_game(state(Board, Players, CurrentPlayer)) :-
+display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
     clear_screen,
     %display_current_player(CurrentPlayer),
     %display_player_info(Players),
@@ -143,28 +153,44 @@ display_game(state(Board, Players, CurrentPlayer)) :-
 
 % ---------------------------------------- GAME LOOP -------------------------------------------- %
 % --> Main game loop.
-game_loop(GameState) :-
+check_end_game(GameState) :-
     game_over(GameState, Winner),
-    handle_game_over(Winner, GameState),
-    !.
+    write('Winner is: '), write(Winner), nl,
+    handle_game_over(Winner, GameState).
 
 game_loop(GameState) :-
     take_turn(GameState, UpdatedGameState),
-    write('Turn taken...'), nl,
+    check_end_game(UpdatedGameState),
     switch_player(UpdatedGameState, NewGameState),
-    write('Player switched...'), nl,
     display_game(NewGameState),
     game_loop(NewGameState).
 
-game_over(_, none).
 game_over(GameState, Winner) :-
-    GameState = state(Board, Players, CurrentPlayer),
-    %check_win_condition(Board, Players, true). TODO: Implement the win condition.
+    GameState = state(Board, Players, CurrentPlayer, [PiecesToWinPlayer1, PiecesToWinPlayer2]),
+    get_score(Board,Players,ScorePlayer1,ScorePlayer2),
+    check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner).
+    
+
+check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
+    ScorePlayer1 < PiecesToWinPlayer1,
+    ScorePlayer2 = PiecesToWinPlayer2,
+    Winner = player1.
+check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
+    ScorePlayer1 = PiecesToWinPlayer1,
+    ScorePlayer2 < PiecesToWinPlayer2,
+    Winner = player2.
+check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
+    ScorePlayer1 < PiecesToWinPlayer1,
+    ScorePlayer2 < PiecesToWinPlayer2,
     Winner = none.
 
 handle_game_over(Winner, _) :-
-    Winner \= none.
-    %TODO: Implement the game over handling.
+    Winner = none,
+    !.
+handle_game_over(Winner, _) :-
+    Winner \= none,
+    write('Winner is: '), write(Winner), nl,
+    halt.
 
 
 
@@ -179,17 +205,16 @@ take_turn(GameState, NewGameState) :-
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
-    GameState = state(Board, Players, CurrentPlayer),
     write('Rotate a row (numbers), or a column (letters) '),
     read(Selection),
     handle_rotation_choice(Selection, GameState, RotatedGameState).
 
 % --> Handle the rotation choice.
-handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer), state(RotatedBoard, Players, CurrentPlayer)) :-
+handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer, PiecesToWin), state(RotatedBoard, Players, CurrentPlayer, PiecesToWin)) :-
     integer(Selection),
     rotate_row(Selection, Board, RotatedBoard).
 
-handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer), state(RotatedBoard, Players, CurrentPlayer)) :-
+handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer, PiecesToWin), state(RotatedBoard, Players, CurrentPlayer, PiecesToWin)) :-
     atom(Selection),
     column_letter_to_index(Selection, ColumnIndex),
     rotate_column(ColumnIndex, Board, RotatedBoard).
@@ -206,11 +231,37 @@ column_letter_to_index(ColumnLetter, ColumnIndex) :-
     ColumnIndex is LetterCode - ACode + 1.
 
 % --> helper to switch player.
-switch_player(state(Board, [Player1, Player2], CurrentPlayer), state(Board, [Player1, Player2], NextPlayer)) :-
+switch_player(state(Board, [Player1, Player2], CurrentPlayer, PiecesToWin), state(Board, [Player1, Player2], NextPlayer,PiecesToWin)) :-
     CurrentPlayer = Player1,
     NextPlayer = Player2.
-switch_player(state(Board, [Player1, Player2], CurrentPlayer), state(Board, [Player1, Player2], NextPlayer)) :-
+switch_player(state(Board, [Player1, Player2], CurrentPlayer, PiecesToWin), state(Board, [Player1, Player2], NextPlayer, PiecesToWin)) :-
     CurrentPlayer = Player2,
     NextPlayer = Player1.
 % ----------------------------------------------------------------------------------------------- %
 
+%-------------------------------------------- Score ----------------------------------------------%
+get_score(Board,Players, ScorePlayer1, ScorePlayer2) :-
+    Players = [player(_, _, _, Player1Pieces), player(_, _, _, Player2Pieces)],
+    length(Board, Height), % Get the height of the board
+    idx(1, Board, FirstRow), % Get the first row
+    length(FirstRow, Width), % Get the width of the board
+    NewHeight is (Height + 1),
+    count_pieces([[1, NewHeight ],[1,1]], Player1Pieces, ScorePlayer1),
+    count_pieces([[1,0],[1,1]], Player2Pieces, ScorePlayer2).
+
+
+% Counts how many pieces in the Pieces list are equal to the given Position.
+count_pieces(_, [], 0). % Base case: No pieces left to process.
+count_pieces(Position, [piece([[X,Y],Tyle], _)| Rest], Count) :-
+    [[X,Y],Tyle] \= [[0,0],[0,0]], % Check if the current piece matches Position.
+    Position = [[_,Y],_],
+    count_pieces(Position, Rest, RestCount), % Count in the remaining list
+    Count is RestCount + 1. % Increment count if the current piece matches Position.
+count_pieces(Position, [piece([[_,Y],_], _) | Rest], Count) :-
+    Position \= [[_,Y],_],
+    count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
+count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
+    [[X,Y],Tyle] = [[0,0],[0,0]],
+    count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
+
+%---------------------------------------------------------------------------------------------------%

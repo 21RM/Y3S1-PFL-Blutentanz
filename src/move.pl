@@ -11,26 +11,27 @@
 % Reads an integer, retrieves the sublist at that index, and prints the directions.
 display_possible_moves(GameState,NewGameState) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
-    write('Enter the number of the piece you want to move: '),
+    write('Enter the number of the piece you want to move '),
     read(Index), % Read the integer index
     idx(Index, ListOfMoves, MovesForPiece), % Retrieve the sublist at the given index (1-based indexing)
     findall(Direction, member((Direction, _), MovesForPiece), Directions), % Extract directions
     display_menu_options(Directions, 1), % Display the directions
-    write('Enter the number of the direction you want to move: '),
+    write('Enter the number of the direction you want to move '),
     read(DirectionIndex), % Read the direction index
     idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
     Move = (Index,DestPosition), % Create the Move variable
-    move(GameState, Move, NewGameState). % Move the piece
+    move(GameState, Move, NewGameState), % Move the piece
+    write('Finish'), nl.
 
 %------------------------------------------------------------------------------------------------------------
 
 %---------------------------------Create GameState after motion----------------------------------------------
 
 move(GameState, Move, NewGameState):-
-    GameState = state(Board, Players, CurrentPlayer),
+    GameState = state(Board, Players, CurrentPlayer, PiecesToWin),
     change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer),
     change_players(Players, NewPlayer, NewPlayers),
-    NewGameState = state(Board, NewPlayers, NewPlayer).
+    NewGameState = state(Board, NewPlayers, NewPlayer, PiecesToWin).
 
 change_players(Players, NewPlayer, NewPlayers):-
     Players = [Player1, Player2],
@@ -55,9 +56,9 @@ change_pieces((Index, Position),CurrentPlayer,ListOfMoves, NewPlayer):-
 %---------------------------------Calculate all possible moves----------------------------------------------
 
 valid_moves(GameState, ListOfMoves) :-
-    GameState = state(Board, Players, player(PlayerNum, PlayerType, Color, Pieces)), % Extract the pieces
+    GameState = state(Board, Players, player(PlayerNum, PlayerType, Color, Pieces),PiecesToWin), % Extract the pieces
     transform_board(Board, TransformedBoard), % Transform the board
-    NewGameState = state(TransformedBoard, Players, player(PlayerNum, PlayerType, Color, Pieces)), % Create a new game state
+    NewGameState = state(TransformedBoard, Players, player(PlayerNum, PlayerType, Color, Pieces),PiecesToWin), % Create a new game state
     all_moves(NewGameState, Pieces, ListOfMoves).
 
 % Iterates through the list of Pieces and calculates all possible moves with directions and destination indices.
@@ -90,7 +91,7 @@ all_moves(GameState, [Piece | RestPieces], [MovesForPiece | RemainingMoves]) :-
     all_moves(GameState, RestPieces, RemainingMoves).
 
 % Format the position with column letters and row numbers
-format_position(state(Board,_,_),[[ColumnIndex, RowIndex], TilePosition], FormattedPosition) :-
+format_position(state(Board,_,_,_),[[ColumnIndex, RowIndex], TilePosition], FormattedPosition) :-
     get_dest_color(Board, [[ColumnIndex, RowIndex], TilePosition], Color),
     column_letter(ColumnIndex, Letter), % Convert column index to letter
     number_codes(RowIndex, Codes), % Converts the number to a list of character codes
@@ -137,8 +138,9 @@ can_place(GameState, EntryPositions, MovesForPiece) :-
    
 
 %check if the move is valid
+
 can_move(GameState, piece(DestInd,Id)) :-
-    GameState = state(Board, Players, player(_, _, PlayerColor, _)),
+    GameState = state(Board, Players, player(_, _, PlayerColor, _),_),
     get_dest_color(Board, DestInd, DestColor),
     validate_color(PlayerColor,DestColor),
     check_for_pieces(Players,piece(DestInd,Id)),
@@ -173,7 +175,8 @@ check_board_limits(Board, PlayerColor, [[X,Y],TileCord]) :-
 check_color_limitis(Height,PlayerColor,Y):-
     PlayerColor=orange,
     Y > 0,
-    Y =< Height+1.
+    NewHeight is Height + 1,
+    Y =< NewHeight.
 check_color_limitis(Height,PlayerColor,Y):-
     PlayerColor=blue,
     Y >= 0,
@@ -185,12 +188,24 @@ get_Player_Pieces(Players, PlayerNum, Pieces) :-
     Player = player(_, _, _, Pieces). 
 
 get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):-
+    length(Board, Height), 
+    NewHeight is Height + 1,
+    BoardY\=0,
+    BoardY\= NewHeight,
     idx(BoardY, Board, DestLine),
     idx(BoardX, DestLine, DestTile),
     get_color( TileX, TileY, ColorInd),
     DestTile = tile(Sides, Rotation),
     rotated_sides(Sides, Rotation, RotatedSides),
     idx(ColorInd, RotatedSides, DestColor).
+get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):-
+    BoardY=0,
+    DestColor = score.
+get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):- 
+    length(Board, Height), 
+    NewHeight is Height + 1,
+    BoardY= NewHeight,
+    DestColor = score.
 
 get_color( TileX, TileY, ColorInd):-
     TileX=1,
@@ -210,7 +225,7 @@ get_color( TileX, TileY, ColorInd):-
     ColorInd=2.
 
 possible_entry_position(GameState, EntryPositions) :-
-    GameState = state(Board, _, player(_, _, Color, _)), % Extract the board and player color
+    GameState = state(Board, _, player(_, _, Color, _),_), % Extract the board and player color
     length(Board, Height), % Get the height of the board
     idx(1, Board, FirstRow), % Get the first row
     length(FirstRow, Width), % Get the width of the board
@@ -224,7 +239,7 @@ possible_entry_position(GameState, EntryPositions) :-
         EntryPositions
     ).
 possible_entry_position(GameState, EntryPositions) :-
-    GameState = state(Board, _, player(_, _, Color, _)), % Extract the board and player color
+    GameState = state(Board, _, player(_, _, Color, _),_), % Extract the board and player color
     length(Board, Height), % Get the height of the board
     idx(1, Board, FirstRow), % Get the first row
     length(FirstRow, Width), % Get the width of the board
@@ -245,5 +260,6 @@ possible_entry_position(GameState, EntryPositions) :-
 % Transform the board so that the bottom-left corner starts at [0,0].
 transform_board(Board, TransformedBoard) :-
     lists:reverse(Board, TransformedBoard). % Simply reverse the rows.
+    
 
 %-------------------------------------------------------------------------------------
