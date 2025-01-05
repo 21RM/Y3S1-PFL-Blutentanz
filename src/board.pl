@@ -165,7 +165,6 @@ display_board(Board, Players) :-
     bg_brown(Brown),
     text_dark_brown(TxtDBrown),
     text_brown(TxtBrown),
-    print_title,
     idx(1, Board, Row), % - Get the first row.
     length(Board, RowCount), % - Determine the number of rows.
     length(Row, ColumnCount), % - Determine the number of columns.
