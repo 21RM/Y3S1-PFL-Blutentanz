@@ -216,7 +216,6 @@ round(Round,GameState,FinalGameState):-
     FinalGameState=NewGameState.
 
    
-
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
     write('Rotate a row (numbers), or a column (letters) '),
