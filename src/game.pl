@@ -207,16 +207,15 @@ round(Round,GameState,FinalGameState):-
     Round>0,
     NewRound is (Round +1),
     display_game(GameState),
-    display_possible_moves(GameState,NewGameState),
-    round(NewRound,NewGameState, FinalGameState).
+    display_possible_moves(NewRound,GameState,NewGameState,FinalRound),
+    round(FinalRound,NewGameState, FinalGameState).
 round(Round,GameState,FinalGameState):-
     Round=3,
     display_game(GameState),
-    display_possible_moves(GameState,NewGameState),
+    display_possible_moves(Round,GameState,NewGameState, NewRound),
     FinalGameState=NewGameState.
-
+round(4,GameState,GameState).
    
-
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
     write('Rotate a row (numbers), or a column (letters) '),
