@@ -201,7 +201,7 @@ take_turn(GameState, NewGameState) :-
     rotation_phase(GameState, RotatedGameState),
     UpdatedGameState = RotatedGameState,
     display_game(UpdatedGameState),
-    display_possible_moves(UpdatedGameState,NewGameState).
+    display_possible_moves(1,UpdatedGameState,NewGameState).
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.

@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/2]).
+:- module(move, [display_possible_moves/3]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -10,15 +10,24 @@
 %-----------------------------------------Display  moves-----------------------------------------------------
 
 
-display_possible_moves(GameState,NewGameState) :-
+display_possible_moves(Round,GameState,NewGameState) :-
+    Round > 0,
+    Round<3,
+    NewRound is (Round +1),
     valid_moves(GameState, ListOfMoves), % Get all valid moves
-    no_moves(ListOfMoves, GameState, NewGameState).
-
+    no_moves(Round,ListOfMoves, GameState, NewGameState),
+    write(NewGameState),
+    display_possible_moves(NewRound,NewGameState,FinalGameState).
+display_possible_moves(Round,GameState,NewGameState) :-
+    Round=3,
+    valid_moves(GameState, ListOfMoves), % Get all valid moves
+    no_moves(Round,ListOfMoves, GameState, NewGameState),
+    write(NewGameState).
 
 
 %------------------------------------------------------------------------------------------------------------
 
-no_moves(ListOfMoves,GameState,NewGameState):-
+no_moves(Round,ListOfMoves,GameState,NewGameState):-
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves = Result,
@@ -27,7 +36,7 @@ no_moves(ListOfMoves,GameState,NewGameState):-
     busy_wait(300000000),
     NewGameState = GameState.
 
-no_moves(ListOfMoves,GameState, NewGameState):-
+no_moves(Round,ListOfMoves,GameState, NewGameState):-
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves \= Result,
@@ -38,61 +47,17 @@ no_moves(ListOfMoves,GameState, NewGameState):-
     display_menu_options(Options, 1), % Display the directions
     validate_input(Options,DirectionIndex),
     length(Options,NumOptions),
-    move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). % Check the user input
-
-validate_index(Options, Choice):-
-    write('Enter the number of the piece you want to move '),
-    read(Number),
-    verify_index(Number,Choice,Options),
-    valid_index(Choice,Options).
-
-verify_index(Number, Choice,_) :-
-    integer(Number),
-    Choice = Number.
-verify_index(Number, Choice,Options) :-
-    \+ integer(Number),
-    write('Invalid input. Please enter a number. '),
-    validate_index(Options,Choice).
-
-valid_index(Choice, Options) :-
-    length(Options,Len),
-    Choice > 0,
-    Choice =< Len.
-valid_index(Choice,Options) :-
-    write('Invalid choice. Try again.\n'),
-    validate_index(Options,Choice).
-
-validate_input(Options, Choice):-
-    write('Enter the number of the direction you want to move '),
-    read(Number),
-    verify_input(Number,Choice,Options),    
-    valid_input(Choice,Options).
-
-verify_input(Number, Choice,_) :-
-    integer(Number),
-    Choice = Number.
-verify_input(Number, Choice,Options) :-
-    \+ integer(Number),
-    write('Invalid input. Please enter a number. '),
-    validate_input(Options,Choice).
-
-valid_input(Choice, Options) :-
-    length(Options,Len),
-    Choice > 0,
-    Choice =< Len.
-valid_input(Choice,Options) :-
-    write('Invalid input. Try again.\n'),
-    validate_input(Options, Choice).
+    move_or_back(Round,NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). % Check the user input
 
 
-move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
+move_or_back(Round,NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex < NumOptions, % Check if the direction index is valid
     idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
     Move = (Index,DestPosition), % Create the Move variable
     move(GameState, Move, NewGameState). % Move the piece 
-move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
+move_or_back(Round,NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex = NumOptions, % Check if the direction index is valid
-    display_possible_moves(GameState,NewGameState). % Display the possible moves again
+    display_possible_moves(Round,GameState,NewGameState). % Display the possible moves again
 
 %---------------------------------Create GameState after motion----------------------------------------------
 
@@ -324,6 +289,49 @@ possible_entry_position(GameState, EntryPositions) :-
     
 %-------------------------------------------------------------------------------------
 
+validate_index(Options, Choice):-
+    write('Enter the number of the piece you want to move '),
+    read(Number),
+    verify_index(Number,Choice,Options),
+    valid_index(Choice,Options).
+
+verify_index(Number, Choice,_) :-
+    integer(Number),
+    Choice = Number.
+verify_index(Number, Choice,Options) :-
+    \+ integer(Number),
+    write('Invalid input. Please enter a number. '),
+    validate_index(Options,Choice).
+
+valid_index(Choice, Options) :-
+    length(Options,Len),
+    Choice > 0,
+    Choice =< Len.
+valid_index(Choice,Options) :-
+    write('Invalid choice. Try again.\n'),
+    validate_index(Options,Choice).
+
+validate_input(Options, Choice):-
+    write('Enter the number of the direction you want to move '),
+    read(Number),
+    verify_input(Number,Choice,Options),    
+    valid_input(Choice,Options).
+
+verify_input(Number, Choice,_) :-
+    integer(Number),
+    Choice = Number.
+verify_input(Number, Choice,Options) :-
+    \+ integer(Number),
+    write('Invalid input. Please enter a number. '),
+    validate_input(Options,Choice).
+
+valid_input(Choice, Options) :-
+    length(Options,Len),
+    Choice > 0,
+    Choice =< Len.
+valid_input(Choice,Options) :-
+    write('Invalid input. Try again.\n'),
+    validate_input(Options, Choice).
 %---------------------------------Auxiliar--------------------------------------------
 
 % Transform the board so that the bottom-left corner starts at [0,0].
