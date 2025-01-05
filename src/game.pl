@@ -143,9 +143,9 @@ to_uppercase_helper(CodeLower, CodeA, CodeZ, _, Upper) :-
 % --> Main display game predicate.
 display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
     clear_screen,
-    %display_current_player(CurrentPlayer),
-    %display_player_info(Players),
-
+    print_title,
+    get_score(Board, Players, ScorePlayer1, ScorePlayer2),
+    display_score(Players, CurrentPlayer, ScorePlayer1, ScorePlayer2, PiecesToWin),
     display_board(Board, Players),
     display_bench(Board, CurrentPlayer), nl.
 % ----------------------------------------------------------------------------------------------- %
