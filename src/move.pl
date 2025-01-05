@@ -34,20 +34,21 @@ move(GameState, Move, NewGameState):-
 
 change_players(Players, NewPlayer, NewPlayers):-
     Players = [Player1, Player2],
-    NewPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
+    NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = orange,
-    NewPlayers = [NewPlayer, Player2 ].
-
+    NewPlayers = [NewPlayer, Player2].
 change_players(Players, NewPlayer, NewPlayers):-
     Players = [Player1, Player2],
-    NewPlayer = (PlayerNum, PlayerType, PlayerColor, PlayerPieces),
+    NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = blue,
-    NewPlayers = [Player1, NewPlayer ].
+    NewPlayers = [Player1, NewPlayer].
 
 change_pieces((Index, Position),CurrentPlayer,ListOfMoves, NewPlayer):-
     CurrentPlayer = player(PlayerNum, PlayerType, PlayerColor, PlayerPieces),
-    replace_index(Index, Position, PlayerPieces, NewPieces),
-    NewPlayer=(PlayerNum, PlayerType, PlayerColor, NewPieces).
+    idx(Index, PlayerPieces, piece(_,Id)),
+    NewPiece = piece(Position, Id),
+    replace_index(Index, NewPiece, PlayerPieces, NewPieces),
+    NewPlayer= player(PlayerNum, PlayerType, PlayerColor, NewPieces).
 
 %-----------------------------------------------------------------------------------------------------------
 
@@ -61,13 +62,13 @@ valid_moves(GameState, ListOfMoves) :-
 
 % Iterates through the list of Pieces and calculates all possible moves with directions and destination indices.
 all_moves(_, [], []). % Base case: No pieces left to process.
-all_moves(GameState, [[[0, 0], [0, 0]] | RestPieces], [FormattedPositions | RemainingMoves]) :-
+all_moves(GameState, [piece([[0, 0], [0, 0]], Id) | RestPieces], [FormattedPositions | RemainingMoves]) :-
     possible_entry_position(GameState, EntryPositions), % Get all possible entry positions
     findall(
-        (FormattedPosition, Position),
+        (FormattedPosition,Position),
         (
             member(Position, EntryPositions), % Iterate through all entry positions
-            can_move(GameState, Position), % Check if move is valid
+            can_move(GameState, piece(Position,Id)), % Check if move is valid
             format_position(GameState,Position, FormattedPosition) % Format the position
         ),
         FormattedPositions
@@ -103,19 +104,19 @@ column_letter(Index, Letter) :-
     char_code(Letter, Code).
 
 % Calculates the new position based on the direction.
-move_in_direction([[BoardX,BoardY],[TileX,TileY]], up, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), up, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
     NewTileY is (3 mod (TileY + 1) + 1),
     NewBoardY is BoardY -1 * (TileY mod 2 - 1).
 
-move_in_direction([[BoardX,BoardY],[TileX,TileY]], down, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), down, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
     NewTileY is (3 mod (TileY + 1) + 1),
     NewBoardY is BoardY +1 * ((TileY+1) mod 2 - 1).
 
-move_in_direction([[BoardX,BoardY],[TileX,TileY]], right, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), right, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
     NewTileX is (3 mod (TileX + 1) + 1),
     NewBoardX is BoardX -1 * (TileX mod 2 - 1).
 
-move_in_direction([[BoardX,BoardY],[TileX,TileY]], left, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), left, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
     NewTileX is (3 mod (TileX + 1) + 1),
     NewBoardX is BoardX +1 * ((TileX+1) mod 2 - 1).
 
@@ -136,11 +137,11 @@ can_place(GameState, EntryPositions, MovesForPiece) :-
    
 
 %check if the move is valid
-can_move(GameState, DestInd) :-
+can_move(GameState, piece(DestInd,Id)) :-
     GameState = state(Board, Players, player(_, _, PlayerColor, _)),
     get_dest_color(Board, DestInd, DestColor),
     validate_color(PlayerColor,DestColor),
-    check_for_pieces(Players,DestInd),
+    check_for_pieces(Players,piece(DestInd,Id)),
     check_board_limits(Board,PlayerColor,DestInd).
 
 validate_color(PlayerColor,DestColor) :-

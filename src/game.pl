@@ -39,7 +39,7 @@ play :-
 initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type]), GameState) :-
     write('Initializing game state...'), nl,
     % -> Initialize pieces.
-    initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces),
+    initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces, Player2Pieces),
     write('Pieces initialized...'), nl,
     
     % -> Generate the board.
@@ -89,20 +89,19 @@ maplist(Predicate, [Head | Tail]) :-
 
 % --> Initialize Players, with types and colors.
 initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces,Player2Pieces):-
-    create_pieces(Player1PiecesCount, Player1Pieces),
-    create_pieces(Player2PiecesCount, Player2Pieces),
-    write('Pieces initialized...'), nl,
-    write(Player1Pieces), nl,
-    write(Player2Pieces), nl.
+    create_pieces(1, Player1PiecesCount, Player1Pieces),
+    create_pieces(1, Player2PiecesCount, Player2Pieces).
 
 
 % Base case: When Count is 0, return an empty list.
-create_pieces(0, []) :- !.
+create_pieces(_, 0, []) :- !.
 % Recursive case: Add [[0,0], [0,0]] to the result list.
-create_pieces(Count, [[[0, 0], [0, 0]] | Rest]) :-
+create_pieces(Id, Count, [Piece | Rest]) :-
     Count > 0,
+    Piece = piece([[0, 0], [0, 0]], Id),
     NextCount is Count - 1,
-    create_pieces(NextCount, Rest).
+    NextId is Id + 1,
+    create_pieces(NextId, NextCount, Rest).
 
 % --> Initialize Players, with types and colors.
 initialize_players(Player1Type, Player2Type, Player1Pieces, Player2Pieces, [Player1, Player2]) :-
@@ -136,7 +135,8 @@ display_game(state(Board, Players, CurrentPlayer)) :-
     clear_screen,
     %display_current_player(CurrentPlayer),
     %display_player_info(Players),
-    display_board(Board).
+    display_board(Board),
+    display_bench(Board, CurrentPlayer).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -150,8 +150,11 @@ game_loop(GameState) :-
 
 game_loop(GameState) :-
     take_turn(GameState, UpdatedGameState),
-    write('looping...'), nl,
-    game_loop(UpdatedGameState).
+    write('Turn taken...'), nl,
+    switch_player(UpdatedGameState, NewGameState),
+    write('Player switched...'), nl,
+    display_game(NewGameState),
+    game_loop(NewGameState).
 
 game_over(_, none).
 game_over(GameState, Winner) :-
@@ -168,16 +171,16 @@ handle_game_over(Winner, _) :-
 % ----------------------------------------------------------------------------------------------- %
 
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
-take_turn(GameState, UpdatedGameState) :-
+take_turn(GameState, NewGameState) :-
     rotation_phase(GameState, RotatedGameState),
     UpdatedGameState = RotatedGameState,
     display_game(UpdatedGameState),
-    display_possible_moves(GameState,NewGameState).
+    display_possible_moves(UpdatedGameState,NewGameState).
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
     GameState = state(Board, Players, CurrentPlayer),
-    write('Rotate a row (numbers), or a column (letters): '),
+    write('Rotate a row (numbers), or a column (letters) '),
     read(Selection),
     handle_rotation_choice(Selection, GameState, RotatedGameState).
 
@@ -201,5 +204,13 @@ column_letter_to_index(ColumnLetter, ColumnIndex) :-
     char_code('A', ACode),
     char_code(UppercaseLetter, LetterCode),
     ColumnIndex is LetterCode - ACode + 1.
+
+% --> helper to switch player.
+switch_player(state(Board, [Player1, Player2], CurrentPlayer), state(Board, [Player1, Player2], NextPlayer)) :-
+    CurrentPlayer = Player1,
+    NextPlayer = Player2.
+switch_player(state(Board, [Player1, Player2], CurrentPlayer), state(Board, [Player1, Player2], NextPlayer)) :-
+    CurrentPlayer = Player2,
+    NextPlayer = Player1.
 % ----------------------------------------------------------------------------------------------- %
 

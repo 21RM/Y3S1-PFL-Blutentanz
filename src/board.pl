@@ -2,7 +2,7 @@
 % ======     THIS FILE CONTAINS THE PREDICATES RELATED TO TILES AND BOARD GENERATION       ====== %
 % =============================================================================================== %
 
-:- module(board, [display_board/1, rotate_row/3, rotate_column/3, rotated_sides/3]).
+:- module(board, [display_board/1, rotate_row/3, rotate_column/3, rotated_sides/3, display_bench/2]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -17,11 +17,14 @@ bg_light_brown('\e[48;2;235;235;210m').      % Light wood (BurlyWood)
 bg_lightest_brown('\e[48;2;255;255;230m').   % Lightest wood (Beige)
 bg_brown('\e[48;2;189;119;69m').       % Medium wood (SaddleBrown)
 bg_dark_brown('\e[48;2;119;49;0m').    % Dark wood (Sienna)
+bg_orange('\e[48;2;225;135;0m').      % - Orange.
+bg_blue('\e[48;2;0;0;255m').          % - Blue.
 text_dark_brown('\e[38;2;119;49;0m').  % Text in dark brown (Sienna)
 text_brown('\e[38;2;189;119;69m').  % Text in brown (SaddleBrown)
 text_orange('\e[38;2;225;135;0m').  % - Orange.
 text_blue('\e[38;2;0;0;255m').  % - Blue.
 text_dark_grey('\e[38;2;35;35;35m').  % - Dark Grey.
+text_white('\e[38;2;255;255;255m').  % - White.
 reset_color('\e[0m').                 % Reset to default
 
 % ----------------------------------------------------------------------------------------------- %
@@ -62,9 +65,11 @@ full(Char) :- char_code(Char, 0x2588). % █
 % -------------------------------------- ROTATE A ROW ------------------------------------------- %
 % --> Main predicate to rotate a row.
 rotate_row(RowIndex, Board, RotatedBoard) :-
-    idx(RowIndex, Board, Row), % - Get the row to rotate.
+    length(Board, RowCount), % - Get the number of rows.
+    RowToRotate is RowCount - RowIndex + 1, % - Calculate the row to rotate.
+    idx(RowToRotate, Board, Row), % - Get the row to rotate.
     rotate_tile_list(Row, RotatedRow), % - Rotate the row.
-    replace_index(RowIndex, RotatedRow, Board, RotatedBoard). % - Replace the row in the board. 
+    replace_index(RowToRotate, RotatedRow, Board, RotatedBoard). % - Replace the row in the board. 
 
 % --> Helper to rotate a list of tiles.
 rotate_tile_list([], []).
@@ -253,7 +258,7 @@ display_row(Row, RowCount, TotalRows) :-
     full(F),
     spacer(Row, F, Us, RowCount),
     display_row_top(Row), % - displays an entire top part of a row.
-    RowNumber is TotalRows - RowCount + 1,
+    RowNumber is RowCount,
     spacer(Row, ' ', ' ', RowNumber),
     display_row_bottom(Row), % - displays an entire bottom part of a row.
     spacer(Row, F, Ls, RowCount).
@@ -341,4 +346,63 @@ display_row_bottom([tile(Sides, Rotation) | Rest]) :- % - Process each tile.
 print_single_space(BGColor) :-
     reset_color(Reset),
     write(BGColor), write(' '), write(Reset).
+
+% --> Print player piece
+print_piece(BGColor, TxtColor, PieceId) :-
+    reset_color(Reset),
+    write(Reset), write(BGColor), write(TxtColor), write(PieceId), write('.'), write(Reset).
 % ----------------------------------------------------------------------------------------------- %
+
+
+
+
+% ---------------------------------------- DISPLAY BENCH ----------------------------------------- %
+display_bench(Board, player(_, _, Color, Pieces)) :-
+    Color = orange,
+    idx(1, Board, Row),
+    length(Row, ColumnCount),
+    CharCount is ColumnCount * 12 - 2, 
+    bg_orange(Orange),
+    bg_dark_brown(DBrown),
+    bg_light_brown(LBrown),
+    text_white(TxtWhite),
+    reset_color(Reset),
+    length(Pieces, PieceCount),
+    write(DBrown), write('  '), write(Reset), write(LBrown), print_repeated(' ', CharCount), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), write(Reset), print_bench_pieces_row(Pieces, CharCount, Orange, TxtWhite), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), write(Reset), write(LBrown), print_repeated(' ', CharCount), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), print_repeated(' ', CharCount), write('  '), write(Reset), nl.
+
+display_bench(Board, player(_, _, Color, Pieces)) :-
+    Color = blue,
+    idx(1, Board, Row),
+    length(Row, ColumnCount),
+    CharCount is ColumnCount * 12 - 2, 
+    bg_blue(Blue),
+    bg_dark_brown(DBrown),
+    bg_light_brown(LBrown),
+    text_white(TxtWhite),
+    reset_color(Reset),
+    length(Pieces, PieceCount),
+    write(DBrown), write('  '), write(Reset), write(LBrown), print_repeated(' ', CharCount), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), write(Reset), print_bench_pieces_row(Pieces, CharCount, Blue, TxtWhite), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), write(Reset), write(LBrown), print_repeated(' ', CharCount), write(Reset), write(DBrown), write('  '), write(Reset), nl,
+    write(DBrown), write('  '), print_repeated(' ', CharCount), write('  '), write(Reset), nl.
+
+print_bench_pieces_row([], 0, _, _).
+print_bench_pieces_row([], CharCount, _, _) :-
+    CharCount > 0,
+    bg_light_brown(LBrown),
+    reset_color(Reset), 
+    write(LBrown), write(' '), write(Reset),
+    NewCharCount is CharCount - 1,
+    print_bench_pieces_row([], NewCharCount, _, _).
+print_bench_pieces_row([piece(_, PieceId) | Rest], CharCount, BGColor, TxtColor) :-
+    bg_light_brown(LBrown),
+    reset_color(Reset),
+    write(LBrown), write(' '), write(Reset), print_piece(BGColor, TxtColor, PieceId), write(LBrown), write(' '), write(Reset),
+    NewCharCount is CharCount - 4,
+    print_bench_pieces_row(Rest, NewCharCount, BGColor, TxtColor).
+
+
+    
