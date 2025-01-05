@@ -145,8 +145,9 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
     clear_screen,
     %display_current_player(CurrentPlayer),
     %display_player_info(Players),
-    display_board(Board),
-    display_bench(Board, CurrentPlayer).
+
+    display_board(Board, Players),
+    display_bench(Board, CurrentPlayer), nl.
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -155,7 +156,6 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
 % --> Main game loop.
 check_end_game(GameState) :-
     game_over(GameState, Winner),
-    write('Winner is: '), write(Winner), nl,
     handle_game_over(Winner, GameState).
 
 game_loop(GameState) :-
@@ -199,9 +199,8 @@ handle_game_over(Winner, _) :-
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
 take_turn(GameState, NewGameState) :-
     rotation_phase(GameState, RotatedGameState),
-    UpdatedGameState = RotatedGameState,
-    display_game(UpdatedGameState),
-    display_possible_moves(UpdatedGameState,NewGameState).
+    display_game(RotatedGameState),
+    display_possible_moves(RotatedGameState,NewGameState).
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
@@ -210,18 +209,27 @@ rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Let
     handle_rotation_choice(Selection, GameState, RotatedGameState).
 
 % --> Handle the rotation choice.
-handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer, PiecesToWin), state(RotatedBoard, Players, CurrentPlayer, PiecesToWin)) :-
+handle_rotation_choice(Selection, state(Board, [player(Player1,Player1Type,Player1Color,Player1Pieces), player(Player2,Player2Type,Player2Color,Player2Pieces)], CurrentPlayer, PiecesToWin), state(RotatedBoard, [player(Player1,Player1Type,Player1Color,NewPlayer1Pieces), player(Player2,Player2Type,Player2Color,NewPlayer2Pieces)], NewCurrentPlayer, PiecesToWin)) :-
     integer(Selection),
-    rotate_row(Selection, Board, RotatedBoard).
+    rotate_row(Selection, Board, RotatedBoard, Player1Pieces, Player2Pieces, NewPlayer1Pieces, NewPlayer2Pieces),
+    change_current_player_pieces(CurrentPlayer, NewPlayer1Pieces, NewPlayer2Pieces, NewCurrentPlayer).
 
-handle_rotation_choice(Selection, state(Board, Players, CurrentPlayer, PiecesToWin), state(RotatedBoard, Players, CurrentPlayer, PiecesToWin)) :-
+handle_rotation_choice(Selection, state(Board, [player(Player1,Player1Type,Player1Color,Player1Pieces), player(Player2,Player2Type,Player2Color,Player2Pieces)], CurrentPlayer, PiecesToWin), state(RotatedBoard, [player(Player1,Player1Type,Player1Color,NewPlayer1Pieces), player(Player2,Player2Type,Player2Color,NewPlayer2Pieces)], NewCurrentPlayer, PiecesToWin)) :-
     atom(Selection),
     column_letter_to_index(Selection, ColumnIndex),
-    rotate_column(ColumnIndex, Board, RotatedBoard).
+    rotate_column(ColumnIndex, Board, RotatedBoard, Player1Pieces, Player2Pieces, NewPlayer1Pieces, NewPlayer2Pieces),
+    change_current_player_pieces(CurrentPlayer, NewPlayer1Pieces, NewPlayer2Pieces, NewCurrentPlayer).
 
 handle_rotation_choice(_, GameState, RotatedGameState) :-
     write('Invalid input. Please enter a valid row number or column letter.\n'),
     rotation_phase(GameState, RotatedGameState).
+
+change_current_player_pieces(player(CP, CPType, CPColor, _), NewPlayer1Pieces, NewPlayer2Pieces, player(CP, CPType, CPColor, NewCPPieces)) :-
+    CPColor = orange,
+    NewCPPieces = NewPlayer1Pieces.
+change_current_player_pieces(player(CP, CPType, CPColor, _), NewPlayer1Pieces, NewPlayer2Pieces, player(CP, CPType, CPColor, NewCPPieces)) :-
+    CPColor = blue,
+    NewCPPieces = NewPlayer2Pieces.
 
 % --> Convert a column letter to an index.
 column_letter_to_index(ColumnLetter, ColumnIndex) :-
