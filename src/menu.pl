@@ -1,6 +1,6 @@
 
 
-:- module(menu, [main_menu/0, display_menu_options/2]).
+:- module(menu, [main_menu/0, display_menu_options/2, read_choice/1]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -46,7 +46,7 @@ validate_choice(Number, Choice) :-
 
 validate_choice(Number, Choice) :-
     \+ integer(Number),
-    write('Invalid input. Please enter a number.\n'),
+    write('Invalid input. Please enter a number. '),
     read_choice(Choice).
 
 % Process the selected option
