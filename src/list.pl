@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3, replace_index/4, inbetween/3]).
+:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -29,3 +29,10 @@ inbetween(Low, High, Value) :-
     Low < High,
     NextLow is Low + 1,
     inbetween(NextLow, High, Value).
+
+generate_empty_lists(0, []). % Base case: If length is 0, return an empty list.
+generate_empty_lists(Len, [[] | Rest]) :-
+    Len > 0,
+    NewLen is Len - 1, % Decrement length
+    generate_empty_lists(NewLen, Rest). % Recurse to build the rest of the list
+

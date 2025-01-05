@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myRandom, [my_random_member/2]).
+:- module(myRandom, [my_random_member/2, busy_wait/1]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -26,3 +26,11 @@ my_random_member(Element, List) :-
 random_between(Low, High, Value) :-
     Upper is High + 1,                  % Adjust the upper bound for inclusiveness
     random(Low, Upper, Value).          % Use `random/3` from the random library
+
+
+busy_wait(0).
+busy_wait(N) :-
+    N > 0,
+    N1 is N - 1,
+    busy_wait(N1).
+
