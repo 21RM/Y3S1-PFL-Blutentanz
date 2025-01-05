@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/2]).
+:- module(move, [display_possible_moves/4]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -11,15 +11,16 @@
 %-----------------------------------------Display  moves-----------------------------------------------------
 
 
-display_possible_moves(GameState,NewGameState) :-
+display_possible_moves(Round,GameState,NewGameState, NewRound) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
-    no_moves(ListOfMoves, GameState, NewGameState).
+    no_moves(Round,ListOfMoves, GameState, NewGameState,NewRound).
 
 
 
 %------------------------------------------------------------------------------------------------------------
 
-no_moves(ListOfMoves,GameState,NewGameState):-
+no_moves(Round,ListOfMoves,GameState,NewGameState, NewRound):-
+    NewRound=4,
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves = Result,
@@ -28,20 +29,32 @@ no_moves(ListOfMoves,GameState,NewGameState):-
     busy_wait(300000000),
     NewGameState = GameState.
 
-no_moves(ListOfMoves,GameState, NewGameState):-
+no_moves(Round,ListOfMoves,GameState, NewGameState, NewRound):-
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves \= Result,
     length(ListOfMoves, NumOfPieces),
-    validate_input(NumOfPieces, 'Choose the number of the Piece you want to move', Index),
+    validate_input(NumOfPieces, 'Choose the number of the Piece you want to move. \nIf you want to pass your turn select p. ',[p] , Index),
+    check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound).
+
+%------------------------------------------------------------------------------------------------------------
+check_pass(Round,Index, ListOfMoves,GameState, NewGameState,NewRound):-
+    Index= p,
+    NewRound=4,
+    NewGameState=GameState,
+    write('Passing turn...').
+
+check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound):-
+    Index \= p,
+    NewRound=Round,
     idx(Index, ListOfMoves, MovesForPiece), % Retrieve the sublist at the given index (1-based indexing)
     findall(Direction, member((Direction, _), MovesForPiece), Directions), % Extract directions
     append(Directions,['Choose other piece'],  Options), % Add an option to change the piece
     display_menu_options(Options, 1), % Display the directions
     length(Options, NumOfOptions),
-    validate_input(NumOfOptions, 'Choose the direction you want to move', DirectionIndex),
-    move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). % Check the user input
-%------------------------------------------------------------------------------------------------------------
+    validate_input(NumOfOptions, 'Choose the direction you want to move',[p] , DirectionIndex),
+    move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). 
+
 
 
 move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
@@ -51,7 +64,7 @@ move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameSta
     move(GameState, Move, NewGameState). % Move the piece 
 move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex = NumOptions, % Check if the direction index is valid
-    display_possible_moves(GameState,NewGameState). % Display the possible moves again
+    display_possible_moves(Round,GameState,NewGameState, NewRound). % Display the possible moves again
 
 
 %---------------------------------Create GameState after motion----------------------------------------------
