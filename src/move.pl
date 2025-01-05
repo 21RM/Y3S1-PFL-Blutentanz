@@ -20,8 +20,9 @@ display_possible_moves(GameState,NewGameState) :-
     read(DirectionIndex), % Read the direction index
     idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
     Move = (Index,DestPosition), % Create the Move variable
-    move(GameState, Move, NewGameState), % Move the piece
-    write('Finish'), nl.
+    move(GameState, Move, NewGameState).% Move the piece
+    
+    
 
 %------------------------------------------------------------------------------------------------------------
 
@@ -38,13 +39,13 @@ change_players(Players, NewPlayer, NewPlayers):-
     NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = orange,
     NewPlayers = [NewPlayer, Player2].
-change_players(Players, NewPlayer, NewPlayers):-
+change_players(Players, NewPlayer, NewPlayers):- 
     Players = [Player1, Player2],
     NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = blue,
     NewPlayers = [Player1, NewPlayer].
 
-change_pieces((Index, Position),CurrentPlayer,ListOfMoves, NewPlayer):-
+change_pieces((Index, piece(Position, _)),CurrentPlayer,ListOfMoves, NewPlayer):-
     CurrentPlayer = player(PlayerNum, PlayerType, PlayerColor, PlayerPieces),
     idx(Index, PlayerPieces, piece(_,Id)),
     NewPiece = piece(Position, Id),
@@ -66,7 +67,7 @@ all_moves(_, [], []). % Base case: No pieces left to process.
 all_moves(GameState, [piece([[0, 0], [0, 0]], Id) | RestPieces], [FormattedPositions | RemainingMoves]) :-
     possible_entry_position(GameState, EntryPositions), % Get all possible entry positions
     findall(
-        (FormattedPosition,Position),
+        (FormattedPosition,piece(Position,Id)),
         (
             member(Position, EntryPositions), % Iterate through all entry positions
             can_move(GameState, piece(Position,Id)), % Check if move is valid
@@ -105,19 +106,19 @@ column_letter(Index, Letter) :-
     char_code(Letter, Code).
 
 % Calculates the new position based on the direction.
-move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), up, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], Id), up, piece([[BoardX,NewBoardY],[TileX,NewTileY]],Id)) :-
     NewTileY is (3 mod (TileY + 1) + 1),
     NewBoardY is BoardY -1 * (TileY mod 2 - 1).
 
-move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), down, [[BoardX,NewBoardY],[TileX,NewTileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], Id), down, piece([[BoardX,NewBoardY],[TileX,NewTileY]],Id)) :-
     NewTileY is (3 mod (TileY + 1) + 1),
     NewBoardY is BoardY +1 * ((TileY+1) mod 2 - 1).
 
-move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), right, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], Id), right, piece([[NewBoardX,BoardY],[NewTileX,TileY]],Id)) :-
     NewTileX is (3 mod (TileX + 1) + 1),
     NewBoardX is BoardX -1 * (TileX mod 2 - 1).
 
-move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], _), left, [[NewBoardX,BoardY],[NewTileX,TileY]]) :-
+move_in_direction(piece([[BoardX,BoardY],[TileX,TileY]], Id), left, piece([[NewBoardX,BoardY],[NewTileX,TileY]],Id)) :-
     NewTileX is (3 mod (TileX + 1) + 1),
     NewBoardX is BoardX +1 * ((TileX+1) mod 2 - 1).
 
