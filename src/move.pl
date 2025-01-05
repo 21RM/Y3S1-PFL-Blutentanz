@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/4]).
+:- module(move, [display_possible_moves/4, check_if_not_won/3]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -52,7 +52,7 @@ check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound):-
     append(Directions,['Choose other piece'],  Options), % Add an option to change the piece
     display_menu_options(Options, 1), % Display the directions
     length(Options, NumOfOptions),
-    validate_input(NumOfOptions, 'Choose the direction you want to move',[p] , DirectionIndex),
+    validate_input(NumOfOptions, 'Choose the direction you want to move',[] , DirectionIndex),
     move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). 
 
 
@@ -182,11 +182,13 @@ can_place(GameState, EntryPositions, MovesForPiece) :-
 %check if the move is valid
 
 can_move(GameState, piece(DestInd,Id)) :-
-    GameState = state(Board, Players, player(_, _, PlayerColor, _),_),
+    GameState = state(Board, Players, player(_, _, PlayerColor, Pieces),_),
     get_dest_color(Board, DestInd, DestColor),
     validate_color(PlayerColor,DestColor),
-    check_for_pieces(Players,piece(DestInd,Id)),
+    check_for_pieces(Board,Players,piece(DestInd,Id)),
+    check_if_not_won(Board,Pieces, Id),
     check_board_limits(Board,PlayerColor,DestInd).
+
 
 validate_color(PlayerColor,DestColor) :-
     PlayerColor = orange,
@@ -197,13 +199,48 @@ validate_color(PlayerColor,DestColor) :-
     DestColor \= orange,
     DestColor \= empty.
 
+check_if_not_won(Board,Pieces, Id) :-
+    findall(piece(Position, Id), member(piece(Position, Id), Pieces), Result),
+    length(Board, Len),
+    won_positions(Len,Result).
+
+won_positions(_,Result):-
+    idx(1, Result,  piece([[X,Y],_],_)),
+    Y = 0,
+    X = 0.
+
+won_positions(Len,Result):-
+    idx(1, Result,  piece([[X,Y],_],Id)),
+    NewLen is (Len + 1),
+    Y \= NewLen,
+    Y \=0.
+ 
 %check if there are pieces in the way  
-check_for_pieces(Players, piece(Position, _)) :-
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y \= 0,
+    Y \= Len,
     get_Player_Pieces(Players, 1, Player1Pieces),
     get_Player_Pieces(Players, 2, Player2Pieces),
     append(Player1Pieces, Player2Pieces, AllPieces),
     maplist(get_position, AllPieces, AllPositions), % Extract all positions
     \+ member(Position, AllPositions). % Check if Position is not in AllPositions
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y = 0,
+    X \= 0,
+    true. % Check if Position is not in AllPositions
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y = Len,
+    true.
+
 
 get_position(piece(Position, _), Position). % Helper predicate to extract position
 
