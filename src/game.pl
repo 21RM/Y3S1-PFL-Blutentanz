@@ -199,8 +199,23 @@ handle_game_over(Winner, _) :-
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
 take_turn(GameState, NewGameState) :-
     rotation_phase(GameState, RotatedGameState),
-    display_game(RotatedGameState),
-    display_possible_moves(RotatedGameState,NewGameState).
+    round(1, RotatedGameState,NewGameState).
+    
+
+round(Round,GameState,FinalGameState):-
+    Round<3,
+    Round>0,
+    NewRound is (Round +1),
+    display_game(GameState),
+    display_possible_moves(GameState,NewGameState),
+    round(NewRound,NewGameState, FinalGameState).
+round(Round,GameState,FinalGameState):-
+    Round=3,
+    display_game(GameState),
+    display_possible_moves(GameState,NewGameState),
+    FinalGameState=NewGameState.
+
+   
 
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
