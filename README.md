@@ -1,5 +1,5 @@
-# Blutentanz_7
-#### Group
+# Blütentanz
+#### Group Blütentanz_7
 
 | Members | Up | Participations |
 |---------|----|----------------|
@@ -14,7 +14,7 @@ Dinis was more responsible for Board.pl, display and visuals, turn and rotation 
 Joana was more responsible for Move.pl, Menu.pl, Game Over and Settings of game configurations, this include functions like initial_state(+GameConfig, -GameState), move(+Gamestate, +Move,-NewGameState), valid_moves(+GameState,-ListOfMoves) and game_over(+GameState, -Winner).
 
 #### Execution
-After having installed the SICStus Prolog 4.9 and entered this project, to execute you just need reach the `/src` directory and run `[game].`  to compile the code and `play.` to run it.
+After having installed the SICStus Prolog 4.9 and entered this project, to execute you just need reach the `/src` directory and run `sicstus` then `[game].`  to compile the code and `play.` to run it.
 
 #### Description of the game
 In this game, you play in a board composed by rows and columns of tiles (4 by 4 in the original game). These Tiles have 4 diffent position, one for each quarter with 3 different colors (grey,blue,orange) and one empty. At the start of each of your turns you have to rotate all of the Tiles in a row or column 90 degrees clockwise, and then you can start moving your pieces. In a turn you can move up to 3 different times but only rotate once, and this rotation must be at the start of the turn. To move, you can only go to 1 space up, down, left or right in the board if the color of the space is the same as your piece or grey. To win you must reach a certain number of pieces (4 out of 5 in the original version) to the opposite side of the board until they leave the board. The first player to reach their 4 pieces out of the board on the opposing side wins.
