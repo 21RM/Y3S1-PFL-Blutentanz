@@ -1,24 +1,28 @@
 
 
-:- module(menu, [main_menu/0, display_menu_options/2, read_choice/1]).
+:- module(menu, [main_menu/1, display_menu_options/2, read_choice/1]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
 :- use_module('display.pl').
+:- use_module('game.pl').
+
+default_config(config([5, 5], [4, 4], [human, human], [4, 4])).
 
 % ---------------------------------------------- MENU  ------------------------------------------ %
 % Main menu logic
-main_menu:-
+main_menu(GameConfig) :-
     clear_screen,
     Options = ['Start Game', 'Settings', 'Exit'],
     Title = 'Main Menu',
-    menu_loop(Options, Title).
+    menu_loop(Options, Title, GameConfig).
 
-menu_loop(Options,Title) :-
+menu_loop(Options,Title, GameConfig) :-
+    print_title, nl, nl,
     display_menu(Options, Title),
     write('Enter the number of your choice: '),
     read_choice(Choice),
-    process_choice(Choice, Options, Title).
+    process_choice(Choice, Options, Title, GameConfig).
 
 % Display menu with numbered options
 display_menu(Options, Title) :-
@@ -50,29 +54,29 @@ validate_choice(Number, Choice) :-
     read_choice(Choice).
 
 % Process the selected option
-process_choice(Choice, Options, Title) :-
+process_choice(Choice, Options, Title, GameConfig) :-
     length(Options, Len),
-    valid_choice(Choice, Len, Options, Title).
+    valid_choice(Choice, Len, Options, Title, GameConfig).
 
-valid_choice(Choice, Len, Options, Title) :-
+valid_choice(Choice, Len, Options, Title, GameConfig) :-
     Choice > 0,
     Choice =< Len,
     idx(Choice, Options, SelectedOption),
-    handle_selection(SelectedOption).
+    handle_selection(SelectedOption, GameConfig).
 
-valid_choice(_, _, Options, Title) :-
+valid_choice(_, _, Options, Title, GameConfig) :-
     write('Invalid choice. Try again.\n'),
-    menu_loop(Options, Title).
+    menu_loop(Options, Title, GameConfig).
 % ----------------------------------------------------------------------------------------------- %
 
 
 
 % ---------------------------------------- SETTINGS MENU ---------------------------------------- %
-settings_menu :-
+settings_menu(GameConfig) :-
     clear_screen,
     Options = ['Board size', 'Number of pieces', 'Score to Win', 'Back to Main Menu'],
     Title = 'Settings',
-    menu_loop(Options, Title).
+    menu_loop(Options, Title, GameConfig).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -80,11 +84,11 @@ settings_menu :-
 
 % --------------------------------------- START GAME MENU --------------------------------------- %
 
-start_game_menu :-
+start_game_menu(GameConfig) :-
     clear_screen,
     Options = ['Human vs Human', 'Human vs Bot', 'Bot vs Bot', 'Back to Main Menu'],
     Title = 'Start Game',
-    menu_loop(Options, Title).
+    menu_loop(Options, Title, GameConfig).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -92,30 +96,35 @@ start_game_menu :-
 % ------------------------------------ HANDLE MENU SELECTION ------------------------------------ %
 
 % Handle each menu option
-handle_selection('Start Game') :-
-    start_game_menu.
-handle_selection('Settings') :-
-    settings_menu.
-handle_selection('Exit') :-
+handle_selection('Start Game', GameConfig) :-
+    start_game_menu(GameConfig).
+handle_selection('Settings', GameConfig) :-
+    settings_menu(GameConfig).
+handle_selection('Exit', _) :-
     clear_screen,
     write('Exiting the game. Goodbye!\n'),
     halt.
-handle_selection('Board size') :-
+handle_selection('Board size', GameConfig) :-
     write('Here you can choose the height and width of your board.\n'),
-    settings_menu.
-handle_selection('Number of pieces') :-
+    settings_menu(GameConfig).
+handle_selection('Number of pieces', GameConfig) :-
     write('Here you can choose the number of game pieces per player.\n'),
-    settings_menu.
-handle_selection('Score to Win') :-
+    settings_menu(GameConfig).
+handle_selection('Score to Win', GameConfig) :-
     write('Here you can choose the number of pieces necessary to win.\n'),
-    settings_menu.
-handle_selection('Back to Main Menu') :-
-    main_menu.
-handle_selection('Human vs Human').
-handle_selection('Human vs Bot') :-
-    write('Starting Human vs Bot...\n'),
-    start_game_menu.
-handle_selection('Bot vs Bot') :-
-    write('Starting bot vs bot...\n'),
-    start_game_menu.
+    settings_menu(GameConfig).
+handle_selection('Back to Main Menu', GameConfig) :-
+    main_menu(GameConfig).
+handle_selection('Human vs Human', NewGameConfig) :-
+    default_config(GameConfig),
+    GameConfig = config(Pieces, Size,_,ToWin),
+    NewGameConfig = config(Pieces, Size, [human, human], ToWin).
+handle_selection('Human vs Bot', NewGameConfig):-
+    default_config(GameConfig),
+    GameConfig = config(Pieces, Size,_,ToWin),
+    NewGameConfig = config(Pieces, Size, [human, bot], ToWin).
+handle_selection('Bot vs Bot', NewGameConfig) :-
+    default_config(GameConfig),
+    GameConfig = config(Pieces, Size,_,ToWin),
+    NewGameConfig = config(Pieces, Size, [bot, bot], ToWin).
 % ----------------------------------------------------------------------------------------------- %
