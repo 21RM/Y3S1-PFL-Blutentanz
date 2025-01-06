@@ -206,6 +206,10 @@ handle_selection('Human vs Human',GameConfig, NewGameConfig) :-
 % 1
 handle_selection('Human vs Bot',GameConfig, NewGameConfig):-
     select_color_menu(GameConfig, NewGameConfig).
+handle_selection('Bot vs Bot',GameConfig, NewGameConfig):-
+    GameConfig = config(Pieces, Size,_,ToWin),
+    GameConfig2 = config(Pieces, Size, [bot,bot], ToWin),
+    select_dificulty_menu(GameConfig2, NewGameConfig).
 % 2
 handle_selection('Orange (starts first)', GameConfig, NewGameConfig) :- 
     GameConfig = config(Pieces, Size, _,ToWin),
@@ -232,8 +236,29 @@ handle_selection('Dumb Bot', GameConfig, NewGameConfig) :-
 handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
     GameConfig = config(Pieces, Size, [bot, human],ToWin),
     NewGameConfig = config(Pieces, Size, [smartbot, human], ToWin).
-handle_selection('Bot vs Bot',GameConfig, NewGameConfig) :-
-    GameConfig = config(Pieces, Size,_,ToWin),
-    NewGameConfig = config(Pieces, Size, [bot, bot], ToWin).
+handle_selection('Dumb Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, Type,ToWin),
+    Type = [bot, bot],
+    GameConfig2 = config(Pieces, Size, [dumbbot, bot], ToWin),
+    select_dificulty_menu(GameConfig2, NewGameConfig).
+handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, Type,ToWin),
+    Type = [bot, bot],
+    GameConfig2 = config(Pieces, Size, [smartbot, bot], ToWin),
+    select_dificulty_menu(GameConfig2, NewGameConfig).
+handle_selection('Dumb Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, Type,ToWin),
+    Type = [P1,P2],
+    Type \= [human, bot],
+    Type \= [bot,bot],
+    P2 = bot,
+    NewGameConfig = config(Pieces, Size, [P1, dumbbot], ToWin).
+handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, Type,ToWin),
+    Type = [P1,P2],
+    Type \= [human, bot],
+    Type \= [bot,bot],
+    P2 = bot,
+    NewGameConfig = config(Pieces, Size, [P1, smartbot], ToWin).
 
 % ----------------------------------------------------------------------------------------------- %
