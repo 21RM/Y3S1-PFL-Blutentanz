@@ -137,8 +137,7 @@ display_game_over_menu(Winner) :-
     clear_screen,
     print_title,
     display_winner(Winner),
-    write('Give any input to go return to Main Menu '),
-    read(RI),
+    write('Give any input to return to Main Menu '),
     play.
 % ----------------------------------------------------------------------------------------------- %
 
@@ -157,7 +156,7 @@ game_loop(GameState) :-
     game_loop(NewGameState).
 
 game_over(GameState, Winner) :-
-    GameState = state(Board, Players, CurrentPlayer, [PiecesToWinPlayer1, PiecesToWinPlayer2]),
+    GameState = state(Board, Players, _, [PiecesToWinPlayer1, PiecesToWinPlayer2]),
     get_score(Board,Players,ScorePlayer1,ScorePlayer2),
     check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner).
     
@@ -217,7 +216,7 @@ round(Round,GameState,FinalGameState):-
     Round=3,
     display_game(GameState),
     write('Last move...'), nl,
-    display_possible_moves(Round,GameState,NewGameState, NewRound),
+    display_possible_moves(Round,GameState,NewGameState, _),
     check_end_game(NewGameState),
     FinalGameState=NewGameState.
 round(4,GameState,GameState).
@@ -244,10 +243,10 @@ handle_rotation_choice(_, GameState, RotatedGameState) :-
     write('Invalid input. Please enter a valid row number or column letter.\n'),
     rotation_phase(GameState, RotatedGameState).
 
-change_current_player_pieces(player(CP, CPType, CPColor, _), NewPlayer1Pieces, NewPlayer2Pieces, player(CP, CPType, CPColor, NewCPPieces)) :-
+change_current_player_pieces(player(CP, CPType, CPColor, _), NewPlayer1Pieces, _, player(CP, CPType, CPColor, NewCPPieces)) :-
     CPColor = orange,
     NewCPPieces = NewPlayer1Pieces.
-change_current_player_pieces(player(CP, CPType, CPColor, _), NewPlayer1Pieces, NewPlayer2Pieces, player(CP, CPType, CPColor, NewCPPieces)) :-
+change_current_player_pieces(player(CP, CPType, CPColor, _), _, NewPlayer2Pieces, player(CP, CPType, CPColor, NewCPPieces)) :-
     CPColor = blue,
     NewCPPieces = NewPlayer2Pieces.
 
@@ -271,8 +270,6 @@ switch_player(state(Board, [Player1, Player2], CurrentPlayer, PiecesToWin), stat
 get_score(Board,Players, ScorePlayer1, ScorePlayer2) :-
     Players = [player(_, _, _, Player1Pieces), player(_, _, _, Player2Pieces)],
     length(Board, Height), % Get the height of the board
-    idx(1, Board, FirstRow), % Get the first row
-    length(FirstRow, Width), % Get the width of the board
     NewHeight is (Height + 1),
     count_pieces([[1, NewHeight ],[1,1]], Player1Pieces, ScorePlayer1),
     count_pieces([[1,0],[1,1]], Player2Pieces, ScorePlayer2).
@@ -297,12 +294,10 @@ count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
 
 
 % ------------------------------------- SMART BOT HELPERS ----------------------------------------- %
-smart_bot_turn(GameState, FinalGameState) :-
+
+smart_bot_turn(GameState, NewGameState) :-
     busy_wait(50000000),
-    GameState = state(Board,_,CurrentPlayer,_),
-    length(Board, RowCount),
-    idx(1, Board, Row),
-    length(Row, ColumnCount),
+    GameState = state(_,_,CurrentPlayer,_),
     get_all_rotations(GameState, RotatedGameStates),
     all_valid_moves(RotatedGameStates, Moves),
     simulate_moves(RotatedGameStates, Moves, SimulatedGameStates),
@@ -325,7 +320,7 @@ calculate_move_no_rotation(GameState, NewGameState) :-
 value(GameState, Player, Value) :-
     GameState = state(Board, Players, CurrentPlayer, _),
     length(Board, RowCount),
-    Player = player(_, _, PlayerColor, PlayerPieces),
+    Player = player(_, _, PlayerColor, _),
     CurrentPlayer = player(_, _, _, CurrentPlayerPieces),
     length(CurrentPlayerPieces, NumberOfPieces),
     goal_row(PlayerColor, RowCount, GoalRow),
@@ -340,7 +335,7 @@ value(GameState, Player, Value) :-
 goal_row(PlayerColor, RowCount, GoalRow) :-
     PlayerColor = orange,
     GoalRow is RowCount*2 + 1.
-goal_row(PlayerColor, RowCount, GoalRow) :-
+goal_row(PlayerColor, _, GoalRow) :-
     PlayerColor = blue,
     GoalRow is 0.
 
