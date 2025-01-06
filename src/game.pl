@@ -192,14 +192,15 @@ take_turn(GameState, NewGameState) :-
     PlayerType = human,
     rotation_phase(GameState, RotatedGameState),
     round(1, RotatedGameState,NewGameState).
-take_turn(GameState, NewGameState) :-
+take_turn(GameState, Move) :-
     GameState = state(_,_,player(_,PlayerType,_,_),_),
     PlayerType = dumbbot,
-    dumb_bot_turn(GameState, NewGameState).
-take_turn(GameState, NewGameState) :-
+    choose_move(GameState, dumbbot, Move).
+
+take_turn(GameState, Move) :-
     GameState = state(_,_,player(_,PlayerType,_,_),_),
     PlayerType = smartbot,
-    smart_bot_turn(GameState, NewGameState).
+    choose_move(GameState, smartbot, Move).
     
 
 round(Round,GameState,FinalGameState):-
@@ -296,7 +297,8 @@ count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
 
 
 % ------------------------------------- SMART BOT HELPERS ----------------------------------------- %
-smart_bot_turn(GameState, NewGameState) :-
+smart_bot_turn(GameState, FinalGameState) :-
+    busy_wait(50000000),
     GameState = state(Board,_,CurrentPlayer,_),
     length(Board, RowCount),
     idx(1, Board, Row),
@@ -308,7 +310,17 @@ smart_bot_turn(GameState, NewGameState) :-
     flatten(EvaluatedStates, FlatEvaluatedState),
     index_of_max(FlatEvaluatedState, IndexOfMax),
     get_chosen_game_state(SimulatedGameStates, IndexOfMax, NewGameState),
-    display_game(NewGameState).
+    check_end_game(NewGameState),
+    display_game(NewGameState),
+    smart_bot_round(2, NewGameState, FinalGameState).
+
+calculate_move_no_rotation(GameState, NewGameState) :-
+    valid_moves(GameState, Moves),
+    get_simulated_game_states(GameState, Moves, SimulatedGameStates),
+    evaluate_states_rotation(SimulatedGameStates, CurrentPlayer, EvaluatedStates),
+    flatten(EvaluatedStates, FlatEvaluatedState),
+    index_of_max(FlatEvaluatedState, IndexOfMax),
+    get_chosen_game_state(SimulatedGameStates, IndexOfMax, NewGameState).
 
 value(GameState, Player, Value) :-
     GameState = state(Board, Players, CurrentPlayer, _),
@@ -318,11 +330,11 @@ value(GameState, Player, Value) :-
     length(CurrentPlayerPieces, NumberOfPieces),
     goal_row(PlayerColor, RowCount, GoalRow),
     calculate_progress(CurrentPlayerPieces, RowCount, GoalRow, Progress),
-    SelfValue is ((RowCount*2+1)*NumberOfPieces) - Progress,
+    SelfValue is Progress,
     get_other_player(Players, Player, player(_,_,OponentColor,OponentPieces)),
     goal_row(OponentColor, RowCount, OponentGoalRow),
     calculate_progress(OponentPieces, RowCount, OponentGoalRow, OponentProgress),
-    OponentValue is ((RowCount*2+1)*NumberOfPieces) - OponentProgress,
+    OponentValue is OponentProgress,
     Value is SelfValue-OponentValue.
 
 goal_row(PlayerColor, RowCount, GoalRow) :-
@@ -336,15 +348,23 @@ calculate_progress([], _, _, 0).
 calculate_progress([Piece | Rest], RowCount, GoalRow, Progress) :-
     Piece = piece(Position, _),
     Position = [[0,0],[0,0]],
-    Position = [[_, CurrentRow], _],
-    PieceProgress is RowCount*2 + 1,
+    PieceProgress is 0,
     calculate_progress(Rest, RowCount, GoalRow, RestProgress),
     Progress is PieceProgress + RestProgress.
 calculate_progress([Piece | Rest], RowCount, GoalRow, Progress) :-
     Piece = piece(Position, _),
     Position \= [[0,0],[0,0]],
     Position = [[_, CurrentRow], [_, TileRow]],
-    PieceProgress is GoalRow - CurrentRow - TileRow + 1,
+    GoalRow \= 0,
+    PieceProgress is (CurrentRow-1)*2 + TileRow,
+    calculate_progress(Rest, RowCount, GoalRow, RestProgress),
+    Progress is PieceProgress + RestProgress.
+calculate_progress([Piece | Rest], RowCount, GoalRow, Progress) :-
+    Piece = piece(Position, _),
+    Position \= [[0,0],[0,0]],
+    Position = [[_, CurrentRow], [_, TileRow]],
+    GoalRow = 0,
+    PieceProgress is RowCount*2 - ((CurrentRow-1)*2) - TileRow + 1,
     calculate_progress(Rest, RowCount, GoalRow, RestProgress),
     Progress is PieceProgress + RestProgress.
 
@@ -415,6 +435,7 @@ evaluate_states_rotation_per_piece([SimulatedGameState|SimulatedGameStates], Cur
 
 get_chosen_game_state(GameStates, Index, NewGameState) :-
     flatten(GameStates, FlatGameStates),
+    length(FlatGameStates, Len),
     NewIndex is Index + 1,
     idx(NewIndex, FlatGameStates, NewGameState).
 
@@ -422,6 +443,7 @@ get_chosen_game_state(GameStates, Index, NewGameState) :-
 
 % ------------------------------------- DUMB BOT HELPERS ------------------------------------------ %
 dumb_bot_turn(GameState, NewGameState) :-
+
     random_rotate(GameState, RotatedGameState),
     busy_wait(50000000),
     display_game(RotatedGameState),
@@ -464,17 +486,40 @@ bot_round(Round, GameState, FinalGameState) :-
     Round>0,
     NewRound is (Round + 1),
     display_game(GameState),
-    busy_wait(100000000),
     select_random_move(GameState, NewGameState),
     check_end_game(NewGameState),
     bot_round(NewRound, NewGameState, FinalGameState).
 bot_round(Round, GameState, FinalGameState) :-
     Round = 3,
     display_game(GameState),
-    busy_wait(100000000),
     select_random_move(GameState, NewGameState),
     check_end_game(NewGameState),
     FinalGameState = NewGameState.
 bot_round(4, GameState, GameState).
+
+smart_bot_round(Round, GameState, FinalGameState) :-
+    Round<3,
+    Round>1,
+    NewRound is (Round + 1),
+    busy_wait(400000000),
+    calculate_move_no_rotation(GameState, NewGameState),
+    display_game(NewGameState),
+    busy_wait(400000000),
+    check_end_game(NewGameState),
+    smart_bot_round(NewRound, NewGameState, FinalGameState).
+smart_bot_round(Round, GameState, FinalGameState) :-
+    Round = 3,
+    calculate_move_no_rotation(GameState, NewGameState),
+    display_game(NewGameState),
+    busy_wait(400000000),
+    check_end_game(NewGameState),
+    FinalGameState = NewGameState.
+smart_bot_round(4, GameState, GameState).
 % ------------------------------------------------------------------------------------------------- %
 
+choose_move(GameState, Level, Move) :-
+    Level = dumbbot,
+    dumb_bot_turn(GameState, Move).
+choose_move(GameState, Level, Move) :-
+    Level = smartbot,
+    smart_bot_turn(GameState, Move).
