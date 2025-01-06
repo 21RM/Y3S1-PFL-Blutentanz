@@ -7,17 +7,16 @@
 |Joana Luís Sá Marques Pimenta | up202206120 | 50% |
 
 #### Participations
-In this project the tasks were well divided since both members had the opportunity to work togetther in all the tasks. To ease the distribution of the work we decided to make one of the members the responsible of every task, even if we work on them together.
+In this project, the tasks were well divided since both members had the opportunity to work together on all the tasks. To ease the distribution of the work, we decided to make one of the members responsible for every task, even if we work on them together.
 
-Dinis was more responsible for Board.pl, display and visuals, turn and rotation in game and the Bot modes in the game, this include functions like display_game(+GameState), value(+GameState, +Player, -Value) and choose_move(+GameState, +Level, -Move).
+Dinis was more responsible for Board.pl, display and visuals, turn and rotation in the game and the Bot modes in the game, this includes functions like display_game(+GameState), value(+GameState, +Player, -Value) and choose_move(+GameState, +Level, -Move).
 
-Joana was more responsible for Move.pl, Menu.pl, Game Over and Settings of game configurations, this include functions like initial_state(+GameConfig, -GameState), move(+Gamestate, +Move,-NewGameState), valid_moves(+GameState,-ListOfMoves) and game_over(+GameState, -Winner).
-
+Joana was more responsible for Move.pl, Menu.pl, Game Over and Settings of game configurations, this includes functions like initial_state(+GameConfig, -GameState), move(+Gamestate, +Move,-NewGameState), valid_moves(+GameState,-ListOfMoves) and game_over(+GameState, -Winner).
 #### Execution
-After having installed the SICStus Prolog 4.9 and entered this project, to execute you just need reach the `/src` directory and run `sicstus` then `[game].`  to compile the code and `play.` to run it.
+After having installed SICStus Prolog 4.9 and entered this project, to execute you just need to reach the `/src` directory and run `sicstus` then `[game].`  to compile the code and `play.` to run it.
 
 #### Description of the game
-In this game, you play in a board composed by rows and columns of tiles (4 by 4 in the original game). These Tiles have 4 diffent position, one for each quarter with 3 different colors (grey,blue,orange) and one empty. At the start of each of your turns you have to rotate all of the Tiles in a row or column 90 degrees clockwise, and then you can start moving your pieces. In a turn you can move up to 3 different times but only rotate once, and this rotation must be at the start of the turn. To move, you can only go to 1 space up, down, left or right in the board if the color of the space is the same as your piece or grey. To win you must reach a certain number of pieces (4 out of 5 in the original version) to the opposite side of the board until they leave the board. The first player to reach their 4 pieces out of the board on the opposing side wins.
+In this game, you play on a board composed by rows and columns of tiles (4 by 4 in the original game). These Tiles have 4 different positions, one for each quarter with 3 different colors (gray, blue, orange) and one empty. At the start of each of your turns, you have to rotate all the Tiles in a row or column 90 degrees clockwise, and then you can start moving your pieces. In a turn, you can move up to 3 different times but only rotate once, and this rotation must be at the start of the turn. To move, you can only go to 1 space up, down, left or right in the board if the color of the space is the same as your piece or gray. To win, you must reach a certain number of pieces (4 out of 5 in the original version) to the opposite side of the board until they leave the board. The first player to reach their 4 pieces out of the board on the opposing side wins.
 
 ![image](image_board.png)
 
