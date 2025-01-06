@@ -119,8 +119,8 @@ rotate_pieces_r(RowToRotate, [piece(Position, ID) | Rest], [piece(Position, ID) 
 
 
 rotate_piece_in_column(ColumnIndex, Player1Pieces, Player2Pieces, NewPlayer1Pieces, NewPlayer2Pieces) :-
-    rotate_pieces_c(Column, Player1Pieces, NewPlayer1Pieces),
-    rotate_pieces_c(Column, Player2Pieces, NewPlayer2Pieces).
+    rotate_pieces_c(ColumnIndex, Player1Pieces, NewPlayer1Pieces),
+    rotate_pieces_c(ColumnIndex, Player2Pieces, NewPlayer2Pieces).
 
 rotate_pieces_c(_, [], []). % Base case: No more pieces to process.
 rotate_pieces_c(ColumnIndex, [piece([[BX, BY], [TX, TY]], ID) | Rest], [piece([[BX, BY], [NewTX, NewTY]], ID) | NewRest]) :-
@@ -188,7 +188,7 @@ print_top_literation(ColumnCount, TotalColumns) :-
     bg_lightest_brown(LBrown),
     text_orange(Orange),
 
-    StartCol is 65, % - ASCII code for 'A'.
+    StartCol is 97, % - ASCII code for 'A'.
     ReverseIndex is TotalColumns - ColumnCount, % - Calculate the reverse index.
     LetterCode is StartCol + ReverseIndex, % - Calculate the ASCII code for the letter.
     char_code(Letter, LetterCode),

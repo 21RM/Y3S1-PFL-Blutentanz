@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(display, [clear_screen/0, print_title/0, validate_input/3, display_score/5]).
+:- module(display, [clear_screen/0, print_title/0, validate_input/3, display_score/5, display_winner/1]).
 
 % --> Define block characters for the "P"
 block_full(Char) :- char_code(Char, 0x2588). % - █ Full block.
@@ -25,6 +25,7 @@ bg_brown('\e[48;2;189;119;69m').       % - Medium wood.
 bg_orange('\e[48;2;225;135;0m').      % - Orange.
 bg_blue('\e[48;2;0;0;255m').          % - Blue.
 text_brown('\e[38;2;189;119;69m').  % - Text in brown.
+text_white('\e[38;2;255;255;255m').  % - White.
 reset_color('\e[0m').
 % ----------------------------------------------------------------------------------------------- %
 
@@ -126,33 +127,72 @@ print_title :-
     bg_brown(BGbrown),
     text_brown(TxtBrown),
     reset_color(Reset),
-    format("     ", []),
-    write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
     format("     ", []),
     write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),
     write(BGLbrown), format("                                                                           ", []), write(Reset),
     write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
     print_ascii(Rows), nl.
 
-display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, PiecesToWin) :-
+display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, [P1PiecesToWin, P2PiecesToWin]) :-
     Color = orange,
     bg_light_brown(BGLbrown),
     bg_brown(BGbrown),
     bg_orange(Orange),
     text_brown(TxtBrown),
+    text_orange(TxtOrange),
+    text_blue(TxtBlue),
     reset_color(Reset),
     format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(Orange), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), write('  '), write(TxtOrange), write('Player1: '), write(ScorePlayer1), write('/'), write(P1PiecesToWin), write('          '), write(Reset), write(BGLbrown), write(TxtBlue), write('Player2: '), write(ScorePlayer2), write('/'), write(P2PiecesToWin), write('          '), write(Reset), write(BGLbrown), write(TxtOrange), write('Current PLayer ->  '),  write(Reset), write(Orange), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(Orange), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
     nl, nl.
-display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, PiecesToWin) :-
+display_score(Players, player(_,_,Color,_), ScorePlayer1, ScorePlayer2, [P1PiecesToWin, P2PiecesToWin]) :-
     Color = blue,
     bg_light_brown(BGLbrown),
     bg_brown(BGbrown),
     bg_blue(Blue),
     text_brown(TxtBrown),
+    text_orange(TxtOrange),
+    text_blue(TxtBlue),
     reset_color(Reset),
-    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(OBlue), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(Blue), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), write('  '), write(TxtOrange), write('Player1: '), write(ScorePlayer1), write('/'), write(P1PiecesToWin), write('          '), write(Reset), write(BGLbrown), write(TxtBlue), write('Player2: '), write(ScorePlayer2), write('/'), write(P2PiecesToWin), write('          '), write('Current PLayer ->  '),  write(Reset), write(Blue), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(BGLbrown), format("                                                                 ", []), write(Reset), write(Blue), write('          '), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
     nl, nl.
 
+display_winner(Winner):-
+    Winner = player2,
+    bg_light_brown(BGLbrown),
+    bg_brown(BGbrown),
+    bg_blue(Blue),
+    text_brown(TxtBrown),
+    text_orange(TxtOrange),
+    text_blue(TxtBlue),
+    text_white(TxtWhite),
+    reset_color(Reset),
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Blue), format("                                                                           ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Blue), write('     '), write(TxtWhite), write('BLUE IS THE WINNER'),format("                                                    ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Blue), format("                                                                           ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
+    nl, nl.
+display_winner(Winner):-
+    Winner = player1,
+    bg_light_brown(BGLbrown),
+    bg_brown(BGbrown),
+    bg_orange(Orange),
+    text_brown(TxtBrown),
+    text_orange(TxtOrange),
+    text_blue(TxtBlue),
+    text_white(TxtWhite),
+    reset_color(Reset),
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Orange), format("                                                                           ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Orange), write('     '), write(TxtWhite), write('ORANGE IS THE WINNER'),format("                                                  ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("| ", []), write(Reset),  write(Orange), format("                                                                           ", []), write(Reset), write(BGbrown), write(TxtBrown), format(" |", []), write(Reset), nl,
+    format("     ", []), write(BGbrown), write(TxtBrown), format("+                                                                             +", []), write(Reset), nl,
+    nl, nl.
 
 ascii_title([[Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Full, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full, Empty, Empty, '_', ',', '-', '.', '_', Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full],    [Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '/', Empty, '\\', '_', '/', Empty, '\\', Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty],    [Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '>', '-', '(', '_', ')', '-', '<', Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty],    [Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, '\\', '_', '/', Empty, '\\', '_', '/', Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty],    [Full, Full, Empty, Empty, Empty, Full, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, '`', '-', '\'', Empty, Empty, Empty, Full, Full, Empty, Full, Full, Full, Empty, Full, Full, Empty, Empty, Empty, Empty],    [Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Full, Empty, Empty, Full, Full, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Full, Full, Full, Full, Full, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Empty, Empty, Full, Full, Empty, Empty, Empty, Empty, Empty, Empty, '|', Empty, Empty, Empty, Empty, Full, Full, Empty, Empty, Full, Full, Empty, Full, Full, Full, Full, Full, Full]]) :-
     block_full(Full),

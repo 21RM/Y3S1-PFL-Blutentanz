@@ -15,31 +15,15 @@
 % --> Define the standard tile.
 standard_tile([empty, orange, blue, gray]).
 % ----------------------------------------------------------------------------------------------- %
-test:-
-    Board=        [ % Board
-    [tile([orange, gray, gray, orange], 0), tile([orange, orange, gray, gray], 0)],
-    [tile([orange, orange, gray, blue], 0), tile([gray, blue, orange, orange], 0)]],
-    Players=        [ % Players
-    player(player1, human, orange, [piece([[2, 2], [2, 2]],1), piece([[1, 1], [1, 1]],2)]),
-    player(player2, human, blue, [piece([[0, 0], [0, 0]],1), piece([[2, 0], [1, 1]],2)])
-    ],
-    get_score(Board,Players, ScorePlayer1, ScorePlayer2).
 
 
 % --------------------------------------- MAIN PREDICATE ---------------------------------------- %
 % --> Main predicate for the game.
 play :-
-    main_menu,
-    write('Starting the game, and out of the menu...'), nl,
-    TemporaryGameConfig = config(
-        [5,5],
-        [4, 4],
-        [human, human],
-        [4, 4]
-    ),
-    initial_state(TemporaryGameConfig, GameState), % Initialize the game state (TODO::Dynamic configurations).
-    write('state initialized...'), nl,
+    main_menu(GameConfig),
+    initial_state(GameConfig, GameState), % Initialize the game state.
     display_game(GameState), % Display the board
+    write(GameConfig), nl,
     game_loop(GameState). % Start the game loop.
 % ----------------------------------------------------------------------------------------------- %
 
@@ -148,6 +132,14 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
     display_score(Players, CurrentPlayer, ScorePlayer1, ScorePlayer2, PiecesToWin),
     display_board(Board, Players),
     display_bench(Board, CurrentPlayer), nl.
+
+display_game_over_menu(Winner) :-
+    clear_screen,
+    print_title,
+    display_winner(Winner),
+    write('Give any input to go return to Main Menu '),
+    read(RI),
+    play.
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -156,11 +148,10 @@ display_game(state(Board, Players, CurrentPlayer, PiecesToWin)) :-
 % --> Main game loop.
 check_end_game(GameState) :-
     game_over(GameState, Winner),
-    handle_game_over(Winner, GameState).
+    handle_game_over(Winner).
 
 game_loop(GameState) :-
     take_turn(GameState, UpdatedGameState),
-    check_end_game(UpdatedGameState),
     switch_player(UpdatedGameState, NewGameState),
     display_game(NewGameState),
     game_loop(NewGameState).
@@ -174,23 +165,22 @@ game_over(GameState, Winner) :-
 check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
     ScorePlayer1 < PiecesToWinPlayer1,
     ScorePlayer2 = PiecesToWinPlayer2,
-    Winner = player1.
+    Winner = player2.
 check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
     ScorePlayer1 = PiecesToWinPlayer1,
     ScorePlayer2 < PiecesToWinPlayer2,
-    Winner = player2.
+    Winner = player1.
 check_winner(ScorePlayer1, ScorePlayer2, PiecesToWinPlayer1, PiecesToWinPlayer2, Winner) :-
     ScorePlayer1 < PiecesToWinPlayer1,
     ScorePlayer2 < PiecesToWinPlayer2,
     Winner = none.
 
-handle_game_over(Winner, _) :-
+handle_game_over(Winner) :-
     Winner = none,
     !.
-handle_game_over(Winner, _) :-
+handle_game_over(Winner) :-
     Winner \= none,
-    write('Winner is: '), write(Winner), nl,
-    halt.
+    display_game_over_menu(Winner).
 
 
 
@@ -206,20 +196,25 @@ round(Round,GameState,FinalGameState):-
     Round<3,
     Round>0,
     NewRound is (Round +1),
+    RoundCount is 4 - Round,
     display_game(GameState),
+    write('You can move any piece '), write(RoundCount), write(' more times.'), nl,
     display_possible_moves(GameState,NewGameState),
+    check_end_game(NewGameState),
     round(NewRound,NewGameState, FinalGameState).
 round(Round,GameState,FinalGameState):-
     Round=3,
     display_game(GameState),
+    write('Last move...'), nl,
     display_possible_moves(GameState,NewGameState),
+    check_end_game(NewGameState),
     FinalGameState=NewGameState.
 
    
 
 % --> Rotation Phase.
-rotation_phase(GameState, RotatedGameState) :-        % TODO: Bug in Capital Letter handling.
-    write('Rotate a row (numbers), or a column (letters) '),
+rotation_phase(GameState, RotatedGameState) :-
+    write('Rotate a row (numbers), or a column (lowercase letters) '),
     read(Selection),
     handle_rotation_choice(Selection, GameState, RotatedGameState).
 

@@ -14,7 +14,7 @@
 display_possible_moves(GameState,NewGameState) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
     no_moves(ListOfMoves, GameState, NewGameState).
-
+    
 
 
 %------------------------------------------------------------------------------------------------------------
