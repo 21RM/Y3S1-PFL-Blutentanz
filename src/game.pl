@@ -22,6 +22,7 @@ standard_tile([empty, orange, blue, gray]).
 play :-
 
     main_menu(GameConfig),
+    write('Game Config: '), write(GameConfig), nl,
     initial_state(GameConfig, GameState), % Initialize the game state.
     display_game(GameState), % Display the board
     game_loop(GameState). % Start the game loop.
