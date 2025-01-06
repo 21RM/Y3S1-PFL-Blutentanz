@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2]).
+:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2,custom_include/3]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -36,3 +36,14 @@ generate_empty_lists(Len, [[] | Rest]) :-
     NewLen is Len - 1, % Decrement length
     generate_empty_lists(NewLen, Rest). % Recurse to build the rest of the list
 
+% Base case: empty list results in an empty filtered list
+custom_include(_, [], []).
+
+% Recursive case: check if the predicate succeeds for the head of the list
+custom_include(Predicate, [Head|Tail], [Head|FilteredTail]) :-
+    call(Predicate, Head),
+    include(Predicate, Tail, FilteredTail).
+
+% Recursive case: skip the head if the predicate fails
+custom_include(Predicate, [_|Tail], FilteredTail) :-
+    include(Predicate, Tail, FilteredTail).

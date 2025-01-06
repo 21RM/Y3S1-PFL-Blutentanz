@@ -3,7 +3,8 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(display, [clear_screen/0, print_title/0, validate_input/3, display_score/5, display_winner/1]).
+
+:- module(display, [clear_screen/0, print_title/0, validate_input/4, display_score/5, display_winner/1]).
 
 % --> Define block characters for the "P"
 block_full(Char) :- char_code(Char, 0x2588). % - █ Full block.
@@ -36,19 +37,21 @@ clear_screen :-
     format("\e[2J\e[H", []),
     nl.
 
-validate_input(MaxNumber, Text, ReturnNumber) :-
+validate_input(MaxNumber, Text , AcceptList, ReturnNumber) :-
     write(Text),
     read(Input),
-    validate_input_value(Input, MaxNumber, Text, ReturnNumber).
+    validate_input_value(Input, MaxNumber, Text, AcceptList, ReturnNumber).
 
-validate_input_value(Input, MaxNumber, _, Input) :-
-    integer(Input),
-    Input >= 1,
-    Input =< MaxNumber.
 
-validate_input_value(_, MaxNumber, Text, ReturnNumber) :-
+validate_input_value(Input, MaxNumber, _, AcceptList, Input) :-
+    member(Input, AcceptList), !.  % If Input is in AcceptList, succeed and cut
+validate_input_value(Input, MaxNumber, _, _, Input) :-
+    integer(Input),                % Ensure Input is an integer
+    Input >= 1,                    % Input is greater than or equal to 1
+    Input =< MaxNumber.            % Input is less than or equal to MaxNumber
+validate_input_value(_, MaxNumber, Text, AcceptList, ReturnNumber) :-
     write('Invalid input. Please enter a number between 1 and '), write(MaxNumber), nl,
-    validate_input(MaxNumber, Text, ReturnNumber).
+    validate_input(MaxNumber, Text, AcceptList, ReturnNumber).
 
 
 % --> Print the rows of the letter

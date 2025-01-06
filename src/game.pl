@@ -20,10 +20,10 @@ standard_tile([empty, orange, blue, gray]).
 % --------------------------------------- MAIN PREDICATE ---------------------------------------- %
 % --> Main predicate for the game.
 play :-
+
     main_menu(GameConfig),
     initial_state(GameConfig, GameState), % Initialize the game state.
     display_game(GameState), % Display the board
-    write(GameConfig), nl,
     game_loop(GameState). % Start the game loop.
 % ----------------------------------------------------------------------------------------------- %
 
@@ -199,19 +199,18 @@ round(Round,GameState,FinalGameState):-
     RoundCount is 4 - Round,
     display_game(GameState),
     write('You can move any piece '), write(RoundCount), write(' more times.'), nl,
-    display_possible_moves(GameState,NewGameState),
+    display_possible_moves(NewRound,GameState,NewGameState,FinalRound),
     check_end_game(NewGameState),
-    round(NewRound,NewGameState, FinalGameState).
+    round(FinalRound,NewGameState, FinalGameState).
 round(Round,GameState,FinalGameState):-
     Round=3,
     display_game(GameState),
     write('Last move...'), nl,
-    display_possible_moves(GameState,NewGameState),
+    display_possible_moves(Round,GameState,NewGameState, NewRound),
     check_end_game(NewGameState),
     FinalGameState=NewGameState.
-
+round(4,GameState,GameState).
    
-
 % --> Rotation Phase.
 rotation_phase(GameState, RotatedGameState) :-
     write('Rotate a row (numbers), or a column (lowercase letters) '),

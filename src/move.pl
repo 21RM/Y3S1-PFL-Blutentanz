@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/2]).
+:- module(move, [display_possible_moves/4, check_if_not_won/3]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').
@@ -11,15 +11,16 @@
 %-----------------------------------------Display  moves-----------------------------------------------------
 
 
-display_possible_moves(GameState,NewGameState) :-
+display_possible_moves(Round,GameState,NewGameState, NewRound) :-
     valid_moves(GameState, ListOfMoves), % Get all valid moves
-    no_moves(ListOfMoves, GameState, NewGameState).
-    
+    no_moves(Round,ListOfMoves, GameState, NewGameState,NewRound).
+
 
 
 %------------------------------------------------------------------------------------------------------------
 
-no_moves(ListOfMoves,GameState,NewGameState):-
+no_moves(Round,ListOfMoves,GameState,NewGameState, NewRound):-
+    NewRound=4,
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves = Result,
@@ -28,20 +29,32 @@ no_moves(ListOfMoves,GameState,NewGameState):-
     busy_wait(300000000),
     NewGameState = GameState.
 
-no_moves(ListOfMoves,GameState, NewGameState):-
+no_moves(Round,ListOfMoves,GameState, NewGameState, NewRound):-
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
     ListOfMoves \= Result,
     length(ListOfMoves, NumOfPieces),
-    validate_input(NumOfPieces, 'Choose the number of the Piece you want to move', Index),
+    validate_input(NumOfPieces, 'Choose the number of the Piece you want to move. \nIf you want to pass your turn select p. ',[p] , Index),
+    check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound).
+
+%------------------------------------------------------------------------------------------------------------
+check_pass(Round,Index, ListOfMoves,GameState, NewGameState,NewRound):-
+    Index= p,
+    NewRound=4,
+    NewGameState=GameState,
+    write('Passing turn...').
+
+check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound):-
+    Index \= p,
+    NewRound=Round,
     idx(Index, ListOfMoves, MovesForPiece), % Retrieve the sublist at the given index (1-based indexing)
     findall(Direction, member((Direction, _), MovesForPiece), Directions), % Extract directions
     append(Directions,['Choose other piece'],  Options), % Add an option to change the piece
     display_menu_options(Options, 1), % Display the directions
     length(Options, NumOfOptions),
-    validate_input(NumOfOptions, 'Choose the direction you want to move', DirectionIndex),
-    move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). % Check the user input
-%------------------------------------------------------------------------------------------------------------
+    validate_input(NumOfOptions, 'Choose the direction you want to move',[] , DirectionIndex),
+    move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). 
+
 
 
 move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
@@ -51,7 +64,7 @@ move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameSta
     move(GameState, Move, NewGameState). % Move the piece 
 move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex = NumOptions, % Check if the direction index is valid
-    display_possible_moves(GameState,NewGameState). % Display the possible moves again
+    display_possible_moves(Round,GameState,NewGameState, NewRound). % Display the possible moves again
 
 
 %---------------------------------Create GameState after motion----------------------------------------------
@@ -169,11 +182,13 @@ can_place(GameState, EntryPositions, MovesForPiece) :-
 %check if the move is valid
 
 can_move(GameState, piece(DestInd,Id)) :-
-    GameState = state(Board, Players, player(_, _, PlayerColor, _),_),
+    GameState = state(Board, Players, player(_, _, PlayerColor, Pieces),_),
     get_dest_color(Board, DestInd, DestColor),
     validate_color(PlayerColor,DestColor),
-    check_for_pieces(Players,piece(DestInd,Id)),
+    check_for_pieces(Board,Players,piece(DestInd,Id)),
+    check_if_not_won(Board,Pieces, Id),
     check_board_limits(Board,PlayerColor,DestInd).
+
 
 validate_color(PlayerColor,DestColor) :-
     PlayerColor = orange,
@@ -184,13 +199,48 @@ validate_color(PlayerColor,DestColor) :-
     DestColor \= orange,
     DestColor \= empty.
 
+check_if_not_won(Board,Pieces, Id) :-
+    findall(piece(Position, Id), member(piece(Position, Id), Pieces), Result),
+    length(Board, Len),
+    won_positions(Len,Result).
+
+won_positions(_,Result):-
+    idx(1, Result,  piece([[X,Y],_],_)),
+    Y = 0,
+    X = 0.
+
+won_positions(Len,Result):-
+    idx(1, Result,  piece([[X,Y],_],Id)),
+    NewLen is (Len + 1),
+    Y \= NewLen,
+    Y \=0.
+ 
 %check if there are pieces in the way  
-check_for_pieces(Players, piece(Position, _)) :-
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y \= 0,
+    Y \= Len,
     get_Player_Pieces(Players, 1, Player1Pieces),
     get_Player_Pieces(Players, 2, Player2Pieces),
     append(Player1Pieces, Player2Pieces, AllPieces),
     maplist(get_position, AllPieces, AllPositions), % Extract all positions
     \+ member(Position, AllPositions). % Check if Position is not in AllPositions
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y = 0,
+    X \= 0,
+    true. % Check if Position is not in AllPositions
+check_for_pieces(Board,Players, piece(Position, _)) :-
+    length(Board, Height),
+    Position = [[X, Y], _],
+    Len is (Height + 1),
+    Y = Len,
+    true.
+
 
 get_position(piece(Position, _), Position). % Helper predicate to extract position
 
