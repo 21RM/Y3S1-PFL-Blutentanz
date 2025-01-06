@@ -35,7 +35,13 @@ Here that configuration will be initialized by initial_state/2 before the game s
 
 GameState
 
-A GameState is `state(Board, Players, CurrentPlayer, PiecesToWin)`.
+A GameState is `state(Board, Players, CurrentPlayer, PiecesToWin)`. In a GameState the Board is represented by a matrix of Tiles, in initial_state the Tiles are randomize and the matrix follows the desired size. A tile is represented by `tile([empty,orange,blue,gray],rotation)` where the rotation can be 0, 90, 180 or 270 degrees. Here is an example of a Board:
+```
+[[tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],270),tile([empty,orange,blue,gray],90),tile([empty,orange,blue,gray],270)],
+[tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],0)],
+[tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],180),tile([empty,orange,blue,gray],0)],
+[tile([empty,orange,blue,gray],180),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],90),tile([empty,orange,blue,gray],270)]]
+```
 
 Move Representation
 
