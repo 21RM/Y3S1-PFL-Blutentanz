@@ -71,46 +71,68 @@ valid_choice(_, _, Options, Title, GameConfig, NewGameConfig) :-
 % ---------------------------------------- SETTINGS MENU ---------------------------------------- %
 % Settings menu with dynamic updates
 % Settings menu with dynamic updates
-/*settings_menu(GameConfig) :-
+settings_menu(GameConfig, NewGameConfig) :-
     clear_screen,
     write('Settings Menu\n'),
-    update_setting(GameConfig, board_size, 'Enter board size (height, width): ', NewGameConfig1),
-    update_setting(NewGameConfig1, number_of_pieces, 'Enter number of pieces per player: ', NewGameConfig2),
-    update_setting(NewGameConfig2, score_to_win, 'Enter score to win: ', NewGameConfig),
+    update_setting(GameConfig, board_size, 'Enter board size in format [height, width], maximum size is [9,9]. \nPress . and Enter to use Default Values: ', NewGameConfig1),
+    update_setting(NewGameConfig1, number_of_pieces, 'Enter number of pieces per player, maximum number of pieces can not be bigger then 2 times the width of the board. \nPress . and Enter to use Default Values: ', NewGameConfig2),
+    update_setting(NewGameConfig2, score_to_win, 'Enter score to win.Can not be bigger then the number of pieces per player \nPress . and Enter to use Default Values: ', FinalGameConfig),
     write('Settings updated successfully.\n'),
-    write_current_settings(NewGameConfig),
+    write_current_settings(FinalGameConfig),
+    FinalGameConfig = config(Pieces,Size, _, ToWin),
+    ChangedGameConfig = config(Pieces, Size, [human, human], ToWin),
     pause_for_input,
-    main_menu(NewGameConfig).
+    clear_screen,
+    Options = ['Start Game', 'Settings', 'Exit'],
+    Title = 'Main Menu',
+    menu_loop(Options, Title, ChangedGameConfig, NewGameConfig).
 
-% Update a specific setting
-update_setting(config(BoardSize, NumPieces, Players, ToWin), SettingKey, Prompt, config(NewBoardSize, NewNumPieces, Players, NewToWin)) :-
-    default_config(config(DefaultBoardSize, DefaultNumPieces, _, DefaultToWin)),
-    ( SettingKey = board_size ->
-        write(Prompt),
-        read(Input),
-        ( Input = [] ->
-            NewBoardSize = DefaultBoardSize
-        ; Input = [Height, Width],
-          NewBoardSize = [Height, Width]
-        ),
-        NewNumPieces = NumPieces, NewToWin = ToWin
-    ; SettingKey = number_of_pieces ->
-        write(Prompt),
-        read(Input),
-        ( Input = [] ->
-            NewNumPieces = DefaultNumPieces
-        ; NewNumPieces = [Input, Input]
-        ),
-        NewBoardSize = BoardSize, NewToWin = ToWin
-    ; SettingKey = score_to_win ->
-        write(Prompt),
-        read(Input),
-        ( Input = [] ->
-            NewToWin = DefaultToWin
-        ; NewToWin = [Input, Input]
-        ),
-        NewBoardSize = BoardSize, NewNumPieces = NumPieces
-    ).
+update_setting(config(NumPieces,BoardSize, Players, ToWin), board_size, Prompt, config( NumPieces,NewBoardSize, Players, ToWin)) :-
+    default_config(config(_,DefaultBoardSize, _, _)),
+    write(Prompt),
+    read(Input),
+    validate_board_size(Input, DefaultBoardSize, NewBoardSize).
+    handle_input_board_size(NewBoardSize, DefaultBoardSize, NewBoardSize).
+
+update_setting(config(NumPieces,BoardSize, Players, ToWin), number_of_pieces, Prompt, config( NewNumPieces,BoardSize, Players, ToWin)) :-
+    default_config(config(DefaultNumPieces,_, _, _)),
+    idx(1, BoardSize, Width),
+    Size is (2 * Width),
+    validate_input(Size, Prompt , [d], Input),
+    handle_input_number_of_pieces(Input, DefaultNumPieces, NewNumPieces).
+
+update_setting(config(NumPieces,BoardSize, Players, ToWin), score_to_win, Prompt, config( NumPieces,BoardSize, Players, NewToWin)) :-
+    default_config(config(_, _, _, DefaultToWin)),
+    idx(1, NumPieces, Num),
+    validate_input(Num, Prompt , [d], Input),
+    handle_input_score_to_win(Input, DefaultToWin, NewToWin).
+
+validate_board_size([], DefaultBoardSize, DefaultBoardSize). % Use default if input is empty
+validate_board_size(Input, DefaultBoardSize, DefaultBoardSize):- % Use default if input is empty
+    Input = d,
+    !.
+validate_board_size([Height, Width], _, [Height, Width]) :-
+    integer(Height), Height > 0, Height =< 9, % Height must be between 1 and 9
+    integer(Width), Width > 0, Width =< 9,   % Width must be between 1 and 9
+    !.
+validate_board_size(_, DefaultBoardSize, DefaultBoardSize) :- % Invalid input falls back to default
+    write('Invalid board size. Using default: '), write(DefaultBoardSize), nl.
+
+% Handle input for board size
+handle_input_board_size([], DefaultBoardSize, DefaultBoardSize).
+handle_input_board_size([Height, Width], _, [Height, Width]).
+
+% Handle input for number of pieces
+handle_input_number_of_pieces([], DefaultNumPieces, DefaultNumPieces).
+handle_input_number_of_pieces(d,DefaultNumPieces, DefaultNumPieces).
+handle_input_number_of_pieces(Input, _, [Input, Input]):-
+    Input\= d.
+
+% Handle input for score to win
+handle_input_score_to_win([], DefaultToWin, DefaultToWin).
+handle_input_score_to_win(d, DefaultToWin, DefaultToWin).
+handle_input_score_to_win(Input, _, [Input, Input]):-
+    Input\= d.
 
 % Display current settings
 write_current_settings(config(BoardSize, NumPieces, Players, ToWin)) :-
@@ -122,7 +144,7 @@ write_current_settings(config(BoardSize, NumPieces, Players, ToWin)) :-
 % Pause to allow player to view updated settings
 pause_for_input :-
     write('Press Enter to return to the main menu...'),
-    get_char(_), !.*/
+    get_char(_), !.
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -161,22 +183,28 @@ select_dificulty_menu(GameConfig,NewGameConfig) :-
 
 % Handle each menu option
 handle_selection('Start Game', GameConfig,NewGameConfig) :-
+    var(GameConfig),
+    default_config(GameConfig),
     start_game_menu(GameConfig,NewGameConfig).
-%handle_selection('Settings', GameConfig,_) :-
- %   settings_menu(GameConfig).
+handle_selection('Start Game', GameConfig,NewGameConfig) :-
+    \+ var(GameConfig),
+    start_game_menu(GameConfig,NewGameConfig).
+handle_selection('Settings', GameConfig,NewGameConfig) :-
+    settings_menu(GameConfig,NewGameConfig).
 handle_selection('Exit', _,_) :-
     clear_screen,
     write('Exiting the game. Goodbye!\n'),
     halt.
-handle_selection('Back to Main Menu',_,NewGameConfig) :-
-    main_menu(NewGameConfig).
+handle_selection('Back to Main Menu',GameConfig ,NewGameConfig) :-
+    clear_screen,
+    Options = ['Start Game', 'Settings', 'Exit'],
+    Title = 'Main Menu',
+    menu_loop(Options, Title, GameConfig, NewGameConfig).
 handle_selection('Human vs Human',GameConfig, NewGameConfig) :-
-    default_config(GameConfig),
     GameConfig = config(Pieces, Size,_,ToWin),
     NewGameConfig = config(Pieces, Size, [human, human], ToWin).
 % 1
 handle_selection('Human vs Bot',GameConfig, NewGameConfig):-
-    default_config(GameConfig),
     select_color_menu(GameConfig, NewGameConfig).
 % 2
 handle_selection('Orange (starts first)', GameConfig, NewGameConfig) :- 
@@ -205,7 +233,6 @@ handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
     GameConfig = config(Pieces, Size, [bot, human],ToWin),
     NewGameConfig = config(Pieces, Size, [smartbot, human], ToWin).
 handle_selection('Bot vs Bot',GameConfig, NewGameConfig) :-
-    default_config(GameConfig),
     GameConfig = config(Pieces, Size,_,ToWin),
     NewGameConfig = config(Pieces, Size, [bot, bot], ToWin).
 
