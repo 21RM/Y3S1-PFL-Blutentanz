@@ -50,9 +50,16 @@ Finally, in GameState we also have PiecesToWin, which is simply a list of the nu
 
 Move Representation
 
-In Move.pl we can check all function related to movements in game. Here we have a function `display_possible_moves(Round,GameState,NewGameState, NewRound) ` that is called in Game.pl and that makes sure to receive the input needed , Round and GameState, and returns NewGameState and NewRound. This function will call all the other functions that make sure we are able to move pieces around, functions like `valid_move/2` and `move/3`. In `move(+GameState, +Move, -NewGameState)` Move is a `(Idx, Piece)` where Idx is the Index in which the Piece is inserted in the list of the Player Pieces, this value (Idx) is the same as the Piece Id since the Pieces are ordered. Piece is of type `piece(Position,Id)` where position is `[[BoardX,BoardY],[TileX,TileY]] ` ,for example, the lower left space in the lower left tile of the board is `[[1,1],[1,1]]`.
+In Move.pl we can check all function related to movements in game.
+Here we have a function `display_possible_moves(Round,GameState,NewGameState, NewRound) ` that is called in Game.pl and that makes sure to receive the input needed , Round (used to control how many moves are left (1,2 or 3))  and GameState, and returns NewGameState and NewRound. This function will call all the other functions that make sure we are able to move pieces around, functions like `valid_move/2` and `move/3`. 
+
+In `move(+GameState, +Move, -NewGameState)` Move is a `(Idx, Piece)` where Idx is the Index in which the Piece is inserted in the list of the Player Pieces. This value (Idx) is the same as the Piece Id since the Pieces are ordered. Piece is of type `piece(Position,Id)` where position is `[[BoardX,BoardY],[TileX,TileY]] ` ,for example, the lower left space in the lower left tile of the board is `[[1,1],[1,1]]`. 
+
+In `move/2` we take the selected move made `Move` and update the position of that Piece in the Board by changing the previous values of that Piece in PlayerPieces to the new value when creating a NewGameState `state(Board, [player( player1 , PlayerType, color, PlayerPieces),player( player2 , PlayerType, color, PlayerPieces)], CurrentPlayer, PiecesToWin)`. We have to change the moved piece in the list PlayerPieces in the CurrentPlayer for the desired value in Move, and then change the CurrentPlayer in the PlayersList so both places can have the updated version of that player. By making this changes to the GameState we get the NewGameState.
 
 User Interaction
+
+
   
 
 
