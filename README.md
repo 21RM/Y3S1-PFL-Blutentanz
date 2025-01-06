@@ -59,7 +59,7 @@ In `move/2` we take the selected move made `Move` and update the position of tha
 
 User Interaction
 
-We start with a Main Menu where the user can select numbered options (1.Start Game. 2. Settings, 3.Exit). Is not mandatory to go to Settings and without going to this Menu the game will Start with default values, but if the user goes to the Settings a phrase explaining the first input expected (Board Size) will show up and if the player enters a valid input, exemple `[5,5].` or chooses `d.` for default, the Board Size will be assigned. If the input is invalid a message will show and the default will be selected.
+We start with a Main Menu where the user can select numbered options (1.Start Game. 2. Settings, 3.Exit). It is not mandatory to go to Settings and without going to this Menu the game will Start with default values, but if the user goes to the Settings a phrase explaining the first input expected (Board Size) will show up and if the player enters a valid input, exemple `[5,5].` or chooses `d.` for default, the Board Size will be assigned. If the input is invalid a message will show and the default will be selected.
 
 Then the following settings will show up one by one and wait for a number input ,f one number for number of pieces per player and then one for number of pieces to win. If the inputs are wrong it will allow new tries and d. still works to select default values.
 
