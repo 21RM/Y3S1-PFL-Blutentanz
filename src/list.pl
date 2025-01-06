@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2,custom_include/3, numlist/3, letterlist/3]).
+:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2,custom_include/3, numlist/3, letterlist/3, flatten/2, index_of_max/2]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -61,7 +61,39 @@ letterlist(Min, Max, Letters) :-
     Min > Max,
     Letters = [].
 letterlist(Min, Max, [Letter|Rest]) :-
-    idx(Min, "abcdefghijklmnopqrstuvwxyz", Letter),
+    idx(Min, "abcdefghijklmnopqrstuvwxyz", Code),
+    char_code(Letter, Code),
     NextMin is Min + 1,
-    letterlist(Min, Max, Rest).
+    letterlist(NextMin, Max, Rest).
 
+flatten([], []). % Base case: An empty list flattens to an empty list.
+flatten([Head|Tail], FlatList) :-
+    flatten(Head, FlatHead),       % Recursively flatten the head.
+    flatten(Tail, FlatTail),       % Recursively flatten the tail.
+    append(FlatHead, FlatTail, FlatList). % Combine flattened head and tail.
+flatten(Element, [Element]) :-
+    \+ is_list(Element). 
+
+is_list([]). % An empty list is a list.
+is_list([_|Tail]) :- is_list(Tail).
+
+
+index_of_max(List, Index) :-
+    index_of_max(List, 0, -1, -999999, Index). % Initialize with index `-1` and value `-inf`.
+
+% Base case: When the list is empty, return the index of the max value.
+index_of_max([], _, MaxIndex, _, MaxIndex).
+
+% Case 1: Current element is greater than the current max value.
+index_of_max([Head|Tail], CurrentIndex, _, MaxValue, Index) :-
+    Head > MaxValue,
+    NewMaxIndex is CurrentIndex,
+    NewMaxValue is Head,
+    NextIndex is CurrentIndex + 1,
+    index_of_max(Tail, NextIndex, NewMaxIndex, NewMaxValue, Index).
+
+% Case 2: Current element is not greater than the current max value.
+index_of_max([Head|Tail], CurrentIndex, MaxIndex, MaxValue, Index) :-
+    Head =< MaxValue,
+    NextIndex is CurrentIndex + 1,
+    index_of_max(Tail, NextIndex, MaxIndex, MaxValue, Index).
