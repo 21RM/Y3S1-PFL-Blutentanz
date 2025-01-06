@@ -68,6 +68,16 @@ If the user selects 1. Start Game by entering input 1. he will be directed to a 
 
 In the game, the inputs taken are: first, the number of the row, or, letter of the column, the player wants to rotate, and after that, the number of the piece the player wants to move. After choosing a piece to move, numbered options of the possible moves will show up, and the player will choose a number to select a movement, and the piece will move. In those numbered options, the last one will let you choose a different piece instead, so you can see the moves that piece has and move it. When selecting a piece, the player also has the option to write p. to end its turn and pass it to the next player. If all the maximum moves per turn (3 moves) are done without passing, then the game will automatically end the turn and pass it to the next player.
 
+#### Conclusions
+
+In this project, we were able to successfully implement all of the Blütentanz game logic and have dynamic settings for a configurable game experience. We also were able to have different modes (Human vs. Human, Human vs. Bot, Bot vs. Bot) and more than one level of difficulty for the bots.
+
+In this project, the biggest difficulty we found was the inability to use the arrows as input on Windows using only Prolog, since those were our desired keys to manipulate the game and menus. We also wanted to improve the display of the game, which was a bit challenging using Prolog, but we made it work.
+
+#### Bibliography
+
+
+
 
 
   
