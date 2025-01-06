@@ -28,10 +28,18 @@ In this game, you play in a board composed by rows and columns of tiles (4 by 4 
 We changed the original game so players can decide settings like board size, number of pieces and pieces necessary to win. If the player does not choose any setting the game will just play with the original settings. The limitations in chosing your setting is that in board size width and height must be lower then 9, so the board doesn't get to big, the maximum number of pieces per player should be less or equal to the double of the Width of the Board, and the pieces to win cannot be greater then the number of pieces per player. These limitations aim to keep the game playable in any scenario, if any invalid input is inserted in the settings then the default settings can also be automatically chosen. In addition we also have the option to set the board to have the width different from the height, which is different from the original game.
 
 #### Game Logic
-  Game Configuration
+Game Configuration
   
 In the Menu.pl we have a `default_config(config([5, 5], [4, 4], [human, human], [4, 4])). ` that defines the default configuration which can be changed in the settings menu. The function main_menu outputs the final configuration (default or not) to the Game.pl.
-Here that configuration will be initialized by initial_state/2 before the game starts. Our initial_state will recieve a configuration like `config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin)` that defines the Number of Pieces per player, the Board Size , PlayerType e PiecesToWin. Player type isn't decided in the settings , instead there is a menu where the player can decide which type of game to play and that will change the player type. Playertypes can be `human` , `dumbbot` and `smartbot`. The output of initial_state is the GameState. A GameState is `state(Board, Players, CurrentPlayer, PiecesToWin)`.
+Here that configuration will be initialized by initial_state/2 before the game starts. Our initial_state will recieve a configuration like `config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin)` that defines the Number of Pieces per player, the Board Size , PlayerType e PiecesToWin. Player type isn't decided in the settings , instead there is a menu where the player can decide which type of game to play and that will change the player type. Playertypes can be `human` , `dumbbot` and `smartbot`. The output of initial_state is the GameState. 
+
+GameState
+
+A GameState is `state(Board, Players, CurrentPlayer, PiecesToWin)`.
+
+Move Representation
+
+User Interaction
   
 
 
