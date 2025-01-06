@@ -29,7 +29,7 @@ play :-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
-initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin), GameState) :-
+initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type], PiecesToWin), GameState) :-
     write('Initializing game state...'), nl,
     % -> Initialize pieces.
     initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces, Player2Pieces),
@@ -188,8 +188,18 @@ handle_game_over(Winner) :-
 
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
 take_turn(GameState, NewGameState) :-
+    GameState = state(_,_,player(_,PlayerType,_,_),_),
+    PlayerType = human,
     rotation_phase(GameState, RotatedGameState),
     round(1, RotatedGameState,NewGameState).
+take_turn(GameState, NewGameState) :-
+    GameState = state(_,_,player(_,PlayerType,_,_),_),
+    PlayerType = dumbbot,
+    dumb_bot_turn(GameState, NewGameState).
+take_turn(GameState, NewGameState) :-
+    GameState = state(_,_,player(_,PlayerType,_,_),_),
+    PlayerType = smartbot,
+    smart_bot_turn(GameState, NewGameState).
     
 
 round(Round,GameState,FinalGameState):-
@@ -281,4 +291,190 @@ count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
     [[X,Y],Tyle] = [[0,0],[0,0]],
     count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
 
-%---------------------------------------------------------------------------------------------------%
+% ------------------------------------------------------------------------------------------------- %
+
+
+
+% ------------------------------------- SMART BOT HELPERS ----------------------------------------- %
+smart_bot_turn(GameState, NewGameState) :-
+    GameState = state(Board,_,CurrentPlayer,_),
+    length(Board, RowCount),
+    idx(1, Board, Row),
+    length(Row, ColumnCount),
+    get_all_rotations(GameState, RotatedGameStates),
+    all_valid_moves(RotatedGameStates, Moves),
+    simulate_moves(RotatedGameStates, Moves, SimulatedGameStates),
+    evaluate_states(SimulatedGameStates, CurrentPlayer, EvaluatedStates),
+    flatten(EvaluatedStates, FlatEvaluatedState),
+    index_of_max(FlatEvaluatedState, IndexOfMax),
+    get_chosen_game_state(SimulatedGameStates, IndexOfMax, NewGameState),
+    display_game(NewGameState).
+
+value(GameState, Player, Value) :-
+    GameState = state(Board, Players, CurrentPlayer, _),
+    length(Board, RowCount),
+    Player = player(_, _, PlayerColor, PlayerPieces),
+    CurrentPlayer = player(_, _, _, CurrentPlayerPieces),
+    length(CurrentPlayerPieces, NumberOfPieces),
+    goal_row(PlayerColor, RowCount, GoalRow),
+    calculate_progress(CurrentPlayerPieces, RowCount, GoalRow, Progress),
+    SelfValue is ((RowCount*2+1)*NumberOfPieces) - Progress,
+    get_other_player(Players, Player, player(_,_,OponentColor,OponentPieces)),
+    goal_row(OponentColor, RowCount, OponentGoalRow),
+    calculate_progress(OponentPieces, RowCount, OponentGoalRow, OponentProgress),
+    OponentValue is ((RowCount*2+1)*NumberOfPieces) - OponentProgress,
+    Value is SelfValue-OponentValue.
+
+goal_row(PlayerColor, RowCount, GoalRow) :-
+    PlayerColor = orange,
+    GoalRow is RowCount*2 + 1.
+goal_row(PlayerColor, RowCount, GoalRow) :-
+    PlayerColor = blue,
+    GoalRow is 0.
+
+calculate_progress([], _, _, 0).
+calculate_progress([Piece | Rest], RowCount, GoalRow, Progress) :-
+    Piece = piece(Position, _),
+    Position = [[0,0],[0,0]],
+    Position = [[_, CurrentRow], _],
+    PieceProgress is RowCount*2 + 1,
+    calculate_progress(Rest, RowCount, GoalRow, RestProgress),
+    Progress is PieceProgress + RestProgress.
+calculate_progress([Piece | Rest], RowCount, GoalRow, Progress) :-
+    Piece = piece(Position, _),
+    Position \= [[0,0],[0,0]],
+    Position = [[_, CurrentRow], [_, TileRow]],
+    PieceProgress is GoalRow - CurrentRow - TileRow + 1,
+    calculate_progress(Rest, RowCount, GoalRow, RestProgress),
+    Progress is PieceProgress + RestProgress.
+
+get_other_player([Player1, Player2], Player, OtherPlayer) :-
+    Player1 = player(_,_,Color1,_),
+    Player = player(_,_,Color,_),
+    Color = Color1,
+    OtherPlayer = Player2.
+get_other_player([Player1, Player2], Player, OtherPlayer) :-
+    Player2 = player(_,_,Color2,_),
+    Player = player(_,_,Color,_),
+    Color = Color2,
+    OtherPlayer = Player1.
+
+
+get_all_rotations(GameState, RotatedStates) :-
+    GameState = state(Board,_,_,_),
+    length(Board, RowCount),
+    idx(1, Board, Row),
+    length(Row, ColumnCount),
+    numlist(1, RowCount, RowList),
+    letterlist(1, ColumnCount, ColumnList),
+    append(RowList, ColumnList, ResList),
+    get_rotated_game_states(ResList, GameState, RotatedStates).
+
+
+get_rotated_game_states([], _, []). % Base case: No more selections to process.
+get_rotated_game_states([Selection|RestOfSelections], GameState, [RotatedGameState|Rest]) :-
+    handle_rotation_choice(Selection, GameState, RotatedGameState),
+    get_rotated_game_states(RestOfSelections, GameState, Rest).
+
+all_valid_moves([], []).
+all_valid_moves([RotatedGameState|RotatedGameStates], [Moves|Rest]) :-
+    valid_moves(RotatedGameState, Moves),
+    all_valid_moves(RotatedGameStates, Rest).
+
+simulate_moves(_, [], []).
+simulate_moves([RotatedGameState|RotatedGameStates], [MovesOnRotation|RestMoves], [SimulatedGameStates|Rest]) :-
+    get_simulated_game_states(RotatedGameState, MovesOnRotation, SimulatedGameStates),
+    simulate_moves(RotatedGameStates, RestMoves, Rest).
+
+get_simulated_game_states(_, [], []).
+get_simulated_game_states(RotatedGameState, [MovesPerPiece|MovesOnRotation], [ListOfSimulatedGameStatesPerPiece|Rest]) :-
+    get_simulated_game_states_per_piece(RotatedGameState, MovesPerPiece, ListOfSimulatedGameStatesPerPiece),
+    get_simulated_game_states(RotatedGameState, MovesOnRotation, Rest).
+
+get_simulated_game_states_per_piece(_, [], []).
+get_simulated_game_states_per_piece(RotatedGameState, [Move|MovesPerPiece], [SimulatedGameState|Rest]) :-
+    Move = (_, piece(Position, Id)),
+    Final = (Id, piece(Position, Id)),
+    move(RotatedGameState, Final, SimulatedGameState),
+    get_simulated_game_states_per_piece(RotatedGameState, MovesPerPiece, Rest).
+
+evaluate_states([], _, []).
+evaluate_states([SimulatedGameState|SimulatedGameStates], CurrentPlayer, [EvaluatedState|Rest]) :-
+    evaluate_states_rotation(SimulatedGameState, CurrentPlayer, EvaluatedState),
+    evaluate_states(SimulatedGameStates, CurrentPlayer, Rest).
+
+evaluate_states_rotation([], _, []).
+evaluate_states_rotation([SimulatedGameStatePerPiece|SimulatedGameState], CurrentPlayer, [EvaluatedStatePerPiece|Rest]) :-
+    evaluate_states_rotation_per_piece(SimulatedGameStatePerPiece, CurrentPlayer, EvaluatedStatePerPiece),
+    evaluate_states_rotation(SimulatedGameState, CurrentPlayer, Rest).
+
+evaluate_states_rotation_per_piece([],_,[]).
+evaluate_states_rotation_per_piece([SimulatedGameState|SimulatedGameStates], CurrentPlayer, [Value|Rest]) :-
+    value(SimulatedGameState, CurrentPlayer, Value),
+    evaluate_states_rotation_per_piece(SimulatedGameStates, CurrentPlayer, Rest).
+
+get_chosen_game_state(GameStates, Index, NewGameState) :-
+    flatten(GameStates, FlatGameStates),
+    NewIndex is Index + 1,
+    idx(NewIndex, FlatGameStates, NewGameState).
+
+% ------------------------------------------------------------------------------------------------- %
+
+% ------------------------------------- DUMB BOT HELPERS ------------------------------------------ %
+dumb_bot_turn(GameState, NewGameState) :-
+    random_rotate(GameState, RotatedGameState),
+    busy_wait(50000000),
+    display_game(RotatedGameState),
+    busy_wait(100000000),
+    bot_round(1, RotatedGameState,NewGameState).
+    
+
+random_rotate(GameState, RotatedGameState) :-
+    GameState = state(Board,_,_,_),
+    length(Board, RowCount),
+    idx(1, Board, Row),
+    length(Row, ColumnCount),
+    numlist(1, RowCount, RowList),
+    letterlist(1, ColumnCount, ColumnList),
+    append(RowList, ColumnList, ResList),
+    my_random_member(Target, ResList),
+    handle_rotation_choice(Target, GameState, RotatedGameState).
+
+select_random_move(GameState, NewGameState) :-
+    valid_moves(GameState, PossibleMoves),
+    length(PossibleMoves, Len),
+    generate_empty_lists(Len, Result),
+    PossibleMoves \= Result,
+    my_random_member(MovePerPiece, PossibleMoves),
+    my_random_member(Target, MovePerPiece),
+    Target = (_, piece(Position, Idx)),
+    Final = (Idx, piece(Position, Idx)),
+    move(GameState, Final, NewGameState).
+select_random_move(GameState, NewGameState) :-
+    valid_moves(GameState, PossibleMoves),
+    length(PossibleMoves, Len),
+    generate_empty_lists(Len, Result),
+    PossibleMoves = Result,
+    NewGameState = GameState.
+
+% ------------------------------------------------------------------------------------------------- %
+% ---------------------------------------- BOT HELPERS -------------------------------------------- %
+bot_round(Round, GameState, FinalGameState) :-
+    Round<3,
+    Round>0,
+    NewRound is (Round + 1),
+    display_game(GameState),
+    busy_wait(100000000),
+    select_random_move(GameState, NewGameState),
+    check_end_game(NewGameState),
+    bot_round(NewRound, NewGameState, FinalGameState).
+bot_round(Round, GameState, FinalGameState) :-
+    Round = 3,
+    display_game(GameState),
+    busy_wait(100000000),
+    select_random_move(GameState, NewGameState),
+    check_end_game(NewGameState),
+    FinalGameState = NewGameState.
+bot_round(4, GameState, GameState).
+% ------------------------------------------------------------------------------------------------- %
+

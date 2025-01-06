@@ -1,5 +1,5 @@
 
-:- module(move, [display_possible_moves/4, check_if_not_won/3]).
+:- module(move, [display_possible_moves/4, check_if_not_won/3, valid_moves/2, move/3]).
 
 :- use_module('board.pl').
 :- use_module('list.pl').

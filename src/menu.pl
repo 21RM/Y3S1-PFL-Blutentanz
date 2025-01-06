@@ -1,4 +1,3 @@
-
 :- module(menu, [main_menu/1, display_menu_options/2, read_choice/1]).
 
 :- use_module('board.pl').
@@ -159,6 +158,27 @@ start_game_menu(GameConfig,NewGameConfig) :-
 % ----------------------------------------------------------------------------------------------- %
 
 
+
+% ------------------------------------ COLOR SELECTION MENU ------------------------------------- %
+
+select_color_menu(GameConfig,NewGameConfig) :-
+    clear_screen,
+    Options = ['Orange (starts first)', 'Blue'],
+    Title = 'Select the color you want to play with',
+    menu_loop(Options, Title, GameConfig, NewGameConfig).
+% ----------------------------------------------------------------------------------------------- %
+
+
+% ------------------------------------ DIFICULTY SELECTION MENU ---------------------------------- %
+
+select_dificulty_menu(GameConfig,NewGameConfig) :-
+    clear_screen,
+    Options = ['Dumb Bot', 'Smart Bot'],
+    Title = 'Select the difficulty',
+    menu_loop(Options, Title, GameConfig, NewGameConfig).
+% ----------------------------------------------------------------------------------------------- %
+
+
 % ------------------------------------ HANDLE MENU SELECTION ------------------------------------ %
 
 % Handle each menu option
@@ -183,10 +203,37 @@ handle_selection('Back to Main Menu',GameConfig ,NewGameConfig) :-
 handle_selection('Human vs Human',GameConfig, NewGameConfig) :-
     GameConfig = config(Pieces, Size,_,ToWin),
     NewGameConfig = config(Pieces, Size, [human, human], ToWin).
+% 1
 handle_selection('Human vs Bot',GameConfig, NewGameConfig):-
-    GameConfig = config(Pieces, Size,_,ToWin),
-    NewGameConfig = config(Pieces, Size, [human, bot], ToWin).
+    select_color_menu(GameConfig, NewGameConfig).
+% 2
+handle_selection('Orange (starts first)', GameConfig, NewGameConfig) :- 
+    GameConfig = config(Pieces, Size, _,ToWin),
+    GameConfig2 = config(Pieces, Size, [human, bot], ToWin),
+    select_dificulty_menu(GameConfig2, NewGameConfig).
+% 3
+handle_selection('Dumb Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, [human, bot],ToWin),
+    NewGameConfig = config(Pieces, Size, [human, dumbbot], ToWin).
+% 3
+handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, [human, bot],ToWin),
+    NewGameConfig = config(Pieces, Size, [human, smartbot], ToWin).
+% 2
+handle_selection('Blue', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, _,ToWin),
+    GameConfig2 = config(Pieces, Size, [bot, human], ToWin),
+    select_dificulty_menu(GameConfig2, NewGameConfig).
+% 3
+handle_selection('Dumb Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, [bot, human],ToWin),
+    NewGameConfig = config(Pieces, Size, [dumbbot, human], ToWin).
+% 3
+handle_selection('Smart Bot', GameConfig, NewGameConfig) :-
+    GameConfig = config(Pieces, Size, [bot, human],ToWin),
+    NewGameConfig = config(Pieces, Size, [smartbot, human], ToWin).
 handle_selection('Bot vs Bot',GameConfig, NewGameConfig) :-
     GameConfig = config(Pieces, Size,_,ToWin),
     NewGameConfig = config(Pieces, Size, [bot, bot], ToWin).
+
 % ----------------------------------------------------------------------------------------------- %
