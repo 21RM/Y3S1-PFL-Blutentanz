@@ -19,7 +19,7 @@ display_possible_moves(Round,GameState,NewGameState, NewRound) :-
 
 %------------------------------------------------------------------------------------------------------------
 
-no_moves(Round,ListOfMoves,GameState,NewGameState, NewRound):-
+no_moves(_,ListOfMoves,GameState,NewGameState, NewRound):-
     NewRound=4,
     length(ListOfMoves, Len),
     generate_empty_lists(Len, Result),
@@ -38,7 +38,7 @@ no_moves(Round,ListOfMoves,GameState, NewGameState, NewRound):-
     check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound).
 
 %------------------------------------------------------------------------------------------------------------
-check_pass(Round,Index, ListOfMoves,GameState, NewGameState,NewRound):-
+check_pass(_,Index, _,GameState, NewGameState,NewRound):-
     Index= p,
     NewRound=4,
     NewGameState=GameState,
@@ -53,40 +53,40 @@ check_pass(Round,Index, ListOfMoves,GameState, NewGameState, NewRound):-
     display_menu_options(Options, 1), % Display the directions
     length(Options, NumOfOptions),
     validate_input(NumOfOptions, 'Choose the direction you want to move',[] , DirectionIndex),
-    move_or_back(NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). 
+    move_or_back(Round,NumOfOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState). 
 
 
 
-move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
+move_or_back(_,NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
     DirectionIndex < NumOptions, % Check if the direction index is valid
-    idx(DirectionIndex, MovesForPiece, (Direction, DestPosition)),
+    idx(DirectionIndex, MovesForPiece, (_, DestPosition)),
     Move = (Index,DestPosition), % Create the Move variable
     move(GameState, Move, NewGameState). % Move the piece 
-move_or_back(NumOptions,Index, DirectionIndex,MovesForPiece,GameState,NewGameState):-
+move_or_back(Round,NumOptions,_, DirectionIndex,_,GameState,NewGameState):-
     DirectionIndex = NumOptions, % Check if the direction index is valid
-    display_possible_moves(Round,GameState,NewGameState, NewRound). % Display the possible moves again
+    display_possible_moves(Round,GameState,NewGameState, _). % Display the possible moves again
 
 
 %---------------------------------Create GameState after motion----------------------------------------------
 
 move(GameState, Move, NewGameState):-
     GameState = state(Board, Players, CurrentPlayer, PiecesToWin),
-    change_pieces(Move,CurrentPlayer,ListOfMoves, NewPlayer),
+    change_pieces(Move,CurrentPlayer,_, NewPlayer),
     change_players(Players, NewPlayer, NewPlayers),
     NewGameState = state(Board, NewPlayers, NewPlayer, PiecesToWin).
 
 change_players(Players, NewPlayer, NewPlayers):-
-    Players = [Player1, Player2],
+    Players = [_, Player2],
     NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = orange,
     NewPlayers = [NewPlayer, Player2].
 change_players(Players, NewPlayer, NewPlayers):- 
-    Players = [Player1, Player2],
+    Players = [Player1, _],
     NewPlayer = player(_, _, PlayerColor, _),
     PlayerColor = blue,
     NewPlayers = [Player1, NewPlayer].
 
-change_pieces((Index, piece(Position, _)),CurrentPlayer,ListOfMoves, NewPlayer):-
+change_pieces((Index, piece(Position, _)),CurrentPlayer,_, NewPlayer):-
     CurrentPlayer = player(PlayerNum, PlayerType, PlayerColor, PlayerPieces),
     idx(Index, PlayerPieces, piece(_,Id)),
     NewPiece = piece(Position, Id),
@@ -210,7 +210,7 @@ won_positions(_,Result):-
     X = 0.
 
 won_positions(Len,Result):-
-    idx(1, Result,  piece([[X,Y],_],Id)),
+    idx(1, Result,  piece([[_,Y],_],_)),
     NewLen is (Len + 1),
     Y \= NewLen,
     Y \=0.
@@ -218,7 +218,7 @@ won_positions(Len,Result):-
 %check if there are pieces in the way  
 check_for_pieces(Board,Players, piece(Position, _)) :-
     length(Board, Height),
-    Position = [[X, Y], _],
+    Position = [[_, Y], _],
     Len is (Height + 1),
     Y \= 0,
     Y \= Len,
@@ -227,16 +227,14 @@ check_for_pieces(Board,Players, piece(Position, _)) :-
     append(Player1Pieces, Player2Pieces, AllPieces),
     maplist(get_position, AllPieces, AllPositions), % Extract all positions
     \+ member(Position, AllPositions). % Check if Position is not in AllPositions
-check_for_pieces(Board,Players, piece(Position, _)) :-
-    length(Board, Height),
+check_for_pieces(_,_, piece(Position, _)) :-
     Position = [[X, Y], _],
-    Len is (Height + 1),
     Y = 0,
     X \= 0,
     true. % Check if Position is not in AllPositions
-check_for_pieces(Board,Players, piece(Position, _)) :-
+check_for_pieces(Board,_, piece(Position, _)) :-
     length(Board, Height),
-    Position = [[X, Y], _],
+    Position = [[_, Y], _],
     Len is (Height + 1),
     Y = Len,
     true.
@@ -245,7 +243,7 @@ check_for_pieces(Board,Players, piece(Position, _)) :-
 get_position(piece(Position, _), Position). % Helper predicate to extract position
 
 %check for board limits according to the player
-check_board_limits(Board, PlayerColor, [[X,Y],TileCord]) :-
+check_board_limits(Board, PlayerColor, [[X,Y],_]) :-
     length(Board, Height), 
     idx(1, Board, FirstRow),
     length(FirstRow, Width),
@@ -280,10 +278,10 @@ get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):-
     DestTile = tile(Sides, Rotation),
     rotated_sides(Sides, Rotation, RotatedSides),
     idx(ColorInd, RotatedSides, DestColor).
-get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):-
+get_dest_color(_, [[_,BoardY],[_, _]], DestColor):-
     BoardY=0,
     DestColor = score.
-get_dest_color(Board, [[BoardX,BoardY],[TileX, TileY]], DestColor):- 
+get_dest_color(Board, [[_,BoardY],[_, _]], DestColor):- 
     length(Board, Height), 
     NewHeight is Height + 1,
     BoardY= NewHeight,
@@ -308,7 +306,7 @@ get_color( TileX, TileY, ColorInd):-
 
 possible_entry_position(GameState, EntryPositions) :-
     GameState = state(Board, _, player(_, _, Color, _),_), % Extract the board and player color
-    length(Board, Height), % Get the height of the board
+    length(Board, _), % Get the height of the board
     idx(1, Board, FirstRow), % Get the first row
     length(FirstRow, Width), % Get the width of the board
     Color = orange, % Orange player
