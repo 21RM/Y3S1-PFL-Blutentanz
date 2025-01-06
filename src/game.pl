@@ -33,7 +33,7 @@ play :-
     write('Starting the game, and out of the menu...'), nl,
     TemporaryGameConfig = config(
         [5,5],
-        [4, 4],
+        [2, 2],
         [human, human],
         [4, 4]
     ),
