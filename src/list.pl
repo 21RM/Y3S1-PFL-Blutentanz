@@ -3,7 +3,7 @@
 % ========================================================================================== %
 
 % ---------------------------------------- Definitions ------------------------------------------ %
-:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2,custom_include/3]).
+:- module(myList, [idx/3, replace_index/4, inbetween/3,generate_empty_lists/2,custom_include/3, numlist/3, letterlist/3]).
 % ----------------------------------------------------------------------------------------------- %
 
 
@@ -38,12 +38,30 @@ generate_empty_lists(Len, [[] | Rest]) :-
 
 % Base case: empty list results in an empty filtered list
 custom_include(_, [], []).
-
 % Recursive case: check if the predicate succeeds for the head of the list
 custom_include(Predicate, [Head|Tail], [Head|FilteredTail]) :-
     call(Predicate, Head),
     include(Predicate, Tail, FilteredTail).
-
 % Recursive case: skip the head if the predicate fails
 custom_include(Predicate, [_|Tail], FilteredTail) :-
     include(Predicate, Tail, FilteredTail).
+
+
+% --> Generate a List of Numbers from Min to Max.
+numlist(Min, Max, List) :-
+    Min > Max,
+    List = [].
+numlist(Min, Max, [Min | Rest]) :-
+    NextMin is Min + 1,
+    numlist(NextMin, Max, Rest).
+
+
+% --> Generate a List of Letters from Min to Max.
+letterlist(Min, Max, Letters) :-
+    Min > Max,
+    Letters = [].
+letterlist(Min, Max, [Letter|Rest]) :-
+    idx(Min, "abcdefghijklmnopqrstuvwxyz", Letter),
+    NextMin is Min + 1,
+    letterlist(Min, Max, Rest).
+

@@ -29,7 +29,7 @@ play :-
 
 % ------------------------------------ INITIALIZE GAME STATE ------------------------------------ %
 % --> Initialize the game state with a 4x4 board.
-initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type],PiecesToWin), GameState) :-
+initial_state(config([Player1PiecesCount,Player2PiecesCount],[Rows, Columns], [Player1Type, Player2Type], PiecesToWin), GameState) :-
     write('Initializing game state...'), nl,
     % -> Initialize pieces.
     initialize_pieces(Player1PiecesCount, Player2PiecesCount, Player1Pieces, Player2Pieces),
@@ -188,8 +188,14 @@ handle_game_over(Winner) :-
 
 % ------------------------------------ GAME LOOP HELPERS ---------------------------------------- %
 take_turn(GameState, NewGameState) :-
+    GameState = state(_,_,player(_,PlayerType,_,_),_),
+    PlayerType = human,
     rotation_phase(GameState, RotatedGameState),
     round(1, RotatedGameState,NewGameState).
+take_turn(GameState, NewGameState) :-
+    GameState = state(_,_,player(_,PlayerType,_,_),_),
+    PlayerType = dumbbot.
+    %TODO CALL BOT PROCESSING.
     
 
 round(Round,GameState,FinalGameState):-
@@ -281,4 +287,17 @@ count_pieces(Position, [piece([[X,Y],Tyle], _) | Rest], Count) :-
     [[X,Y],Tyle] = [[0,0],[0,0]],
     count_pieces(Position, Rest, Count). % Skip if the current piece does not match. 
 
-%---------------------------------------------------------------------------------------------------%
+% ------------------------------------------------------------------------------------------------- %
+
+
+
+% ------------------------------------- DUMB BOT HELPERS ------------------------------------------ %
+random_rotate_select(GameState, RotatedGameState) :-
+    GameState = state(Board,_,_,_),
+    length(Board, RowCount),
+    idx(1, Board, Row),
+    length(Row, CoulmnCount),
+    numlist(1, RowCount, RowList),
+    letterlist(1, ColumnCount, ColumnList).
+
+% ------------------------------------------------------------------------------------------------- %
