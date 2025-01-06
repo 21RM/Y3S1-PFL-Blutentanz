@@ -17,7 +17,7 @@ Joana was more responsible for Move.pl, Menu.pl, Game Over and Settings of game 
 After having installed the SICStus Prolog 4.9 and entered this project, to execute you just need reach the `/src` directory and run `[game].`  to compile the code and `play.` to run it.
 
 #### Description of the game
-In this game, you play in a board composed by rows and columns of tiles. These Tiles have 4 diffent position, one for each quarter with 3 different colors (grey,blue,orange) and one empty. At the start of each of your turns you have to rotate all of the Tiles in row or column and then you can start moving your pieces. In a turn you can move up to 3 different times but only rotate once, and this rotation must be at the start of the turn. To win you must reach a certain number of pieces (4 out of 5 in the original version) to the opposite side of the board until they leave the board. The first player to reach their 4 pieces out of the board on the opposing side wins.
+In this game, you play in a board composed by rows and columns of tiles, (5 by 5 in the original game). These Tiles have 4 diffent position, one for each quarter with 3 different colors (grey,blue,orange) and one empty. At the start of each of your turns you have to rotate all of the Tiles in row or column and then you can start moving your pieces. In a turn you can move up to 3 different times but only rotate once, and this rotation must be at the start of the turn. To win you must reach a certain number of pieces (4 out of 5 in the original version) to the opposite side of the board until they leave the board. The first player to reach their 4 pieces out of the board on the opposing side wins.
 
 ![image](image_board.png)
 
