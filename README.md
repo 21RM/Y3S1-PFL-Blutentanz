@@ -50,6 +50,8 @@ Finally, in GameState we also have PiecesToWin, which is simply a list of the nu
 
 Move Representation
 
+In Move.pl we can check all function related to movements in game. Here we have a function `display_possible_moves(Round,GameState,NewGameState, NewRound) ` that can is called in Game.pl and that makes sure to receive the input needed , Round and GameState, and returns NewGameState and NewRound. This function will call all the other functions that make sure we are able to move pieces around, functions like valid_move/2 and move/3. In `move(+GameState, +Move, -NewGameState)` Move is a `(Idx, Piece)` where Idx is the Index in which the Piece is inserted in the list of the Player Pieces, this value (Idx) is the same as the Piece Id since the Pieces are ordered. Piece is of type `piece(Position,Id)` where position is `[[BoardX,BoardY],[TileX,TileY]] ` ,for example, the lower left space in the lower left tile of the board is [[1,1],[1,1]]`.
+
 User Interaction
   
 
