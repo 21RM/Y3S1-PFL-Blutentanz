@@ -76,6 +76,9 @@ In this project, the biggest difficulty we found was the inability to use the ar
 
 #### Bibliography
 
+We used the tool ChatGPT to help us identify different libraries we could use and, if those libraries weren't available, to help us create functions with the same effect. Some cases in our project of these uses of ChatGPT are functions like busy_wait and some functions in List.pl.
+We also used this tool to help us with errors and debug.
+
 
 
 
