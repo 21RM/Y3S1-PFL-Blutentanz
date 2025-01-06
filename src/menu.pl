@@ -80,7 +80,7 @@ settings_menu(GameConfig, NewGameConfig) :-
     update_setting(NewGameConfig2, score_to_win, 'Enter score to win.Can not be bigger then the number of pieces per player \nPress . and Enter to use Default Values: ', FinalGameConfig),
     write('Settings updated successfully.\n'),
     write_current_settings(FinalGameConfig),
-    FinalGameConfig = config(Size, Pieces, _, ToWin),
+    FinalGameConfig = config(Pieces,Size, _, ToWin),
     ChangedGameConfig = config(Pieces, Size, [human, human], ToWin),
     pause_for_input,
     clear_screen,
@@ -88,21 +88,21 @@ settings_menu(GameConfig, NewGameConfig) :-
     Title = 'Main Menu',
     menu_loop(Options, Title, ChangedGameConfig, NewGameConfig).
 
-update_setting(config(BoardSize, NumPieces, Players, ToWin), board_size, Prompt, config(NewBoardSize, NumPieces, Players, ToWin)) :-
-    default_config(config(DefaultBoardSize, _, _, _)),
+update_setting(config(NumPieces,BoardSize, Players, ToWin), board_size, Prompt, config( NumPieces,NewBoardSize, Players, ToWin)) :-
+    default_config(config(_,DefaultBoardSize, _, _)),
     write(Prompt),
     read(Input),
     validate_board_size(Input, DefaultBoardSize, NewBoardSize).
     handle_input_board_size(NewBoardSize, DefaultBoardSize, NewBoardSize).
 
-update_setting(config(BoardSize, NumPieces, Players, ToWin), number_of_pieces, Prompt, config(BoardSize, NewNumPieces, Players, ToWin)) :-
-    default_config(config(_, DefaultNumPieces, _, _)),
+update_setting(config(NumPieces,BoardSize, Players, ToWin), number_of_pieces, Prompt, config( NewNumPieces,BoardSize, Players, ToWin)) :-
+    default_config(config(DefaultNumPieces,_, _, _)),
     idx(1, BoardSize, Width),
     Size is (2 * Width),
     validate_input(Size, Prompt , [d], Input),
     handle_input_number_of_pieces(Input, DefaultNumPieces, NewNumPieces).
 
-update_setting(config(BoardSize, NumPieces, Players, ToWin), score_to_win, Prompt, config(BoardSize, NumPieces, Players, NewToWin)) :-
+update_setting(config(NumPieces,BoardSize, Players, ToWin), score_to_win, Prompt, config( NumPieces,BoardSize, Players, NewToWin)) :-
     default_config(config(_, _, _, DefaultToWin)),
     idx(1, NumPieces, Num),
     validate_input(Num, Prompt , [d], Input),
@@ -126,13 +126,13 @@ handle_input_board_size([Height, Width], _, [Height, Width]).
 % Handle input for number of pieces
 handle_input_number_of_pieces([], DefaultNumPieces, DefaultNumPieces).
 handle_input_number_of_pieces(d,DefaultNumPieces, DefaultNumPieces).
-handle_input_number_of_pieces(Input, _, [Input, Input]),
+handle_input_number_of_pieces(Input, _, [Input, Input]):-
     Input\= d.
 
 % Handle input for score to win
 handle_input_score_to_win([], DefaultToWin, DefaultToWin).
 handle_input_score_to_win(d, DefaultToWin, DefaultToWin).
-handle_input_score_to_win(Input, _, [Input, Input]),
+handle_input_score_to_win(Input, _, [Input, Input]):-
     Input\= d.
 
 % Display current settings
