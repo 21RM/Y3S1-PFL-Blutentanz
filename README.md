@@ -42,6 +42,11 @@ A GameState is `state(Board, Players, CurrentPlayer, PiecesToWin)`. In a GameSta
 [tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],180),tile([empty,orange,blue,gray],0)],
 [tile([empty,orange,blue,gray],180),tile([empty,orange,blue,gray],0),tile([empty,orange,blue,gray],90),tile([empty,orange,blue,gray],270)]]
 ```
+In a GameState, Players are represented by a list `[player( player1 , PlayerType, color, PlayerPieces),player( player2 , PlayerType, color, PlayerPieces)]`. Players have there player number, there type (`human` , `dumbbot` and `smartbot`), the color, for player1 is always orange and for player 2 blue and their pieces. PlayerPieces are represented by a list of the players pieces. A piece is `piece(Position,Id)`. 
+
+In a GameState, CurrentPlayer is just the player( playerNum , PlayerType, color, PlayerPieces) of the player who is currently playing it's turn. At initialization current player is always orange (player1) and so orange always starts first.
+
+Finally, in GameState we also have PiecesToWin, which is simply a list of the number of pieces necessary to win, for example `[5,5]` means player 1 needs to score 5 as well as player 2.
 
 Move Representation
 
